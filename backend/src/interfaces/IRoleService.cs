@@ -7,6 +7,7 @@ namespace Interfaces
   {
     Task<GetRoleDTO> Get(ClaimsPrincipal user, int id);
     Task<IEnumerable<GetRoleDTO>> Getall(ClaimsPrincipal user);
+    Task<UpdateRoleDTO> Put(ClaimsPrincipal user,  UpdateRoleDTO dto, int id);
     Task<ResponseRoleDTO> CreateAsync(CreateRoleDTO dto, ClaimsPrincipal user);
   }
 }

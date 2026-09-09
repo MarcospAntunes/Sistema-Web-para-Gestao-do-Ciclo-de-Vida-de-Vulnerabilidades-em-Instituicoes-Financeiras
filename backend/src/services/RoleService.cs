@@ -81,5 +81,31 @@ namespace Services
 
       return roles;
     }
+
+    public async Task<UpdateRoleDTO> Put(ClaimsPrincipal user, UpdateRoleDTO dto, int id)
+    {
+      IActionResult? authResult = Auth.IsLogged(user);
+      if (authResult is not null) throw new Exception("Invalid authentication or access denied.");
+
+      int userId = GetAuthenticatedUserId(user);
+
+      Role? roleEntity = await _context.Roles
+        .FirstOrDefaultAsync(e => e.Id == id);
+
+      if (roleEntity == null)
+      {
+        throw new Exception("Role not found.");
+      }
+
+      roleEntity.Name = dto.Name;
+      roleEntity.AccessLevel = dto.AccessLevel;
+
+      await _context.SaveChangesAsync();
+
+      return new UpdateRoleDTO(
+        roleEntity.Name,
+        roleEntity.AccessLevel
+      );
+    }
   }
 }
