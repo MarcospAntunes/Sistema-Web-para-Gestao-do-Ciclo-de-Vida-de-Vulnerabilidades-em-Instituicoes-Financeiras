@@ -5,14 +5,14 @@ import {
   ChangeThemeButtonContainer,
   ChangeThemeButtonStyle,
 } from "./ChangeThemeButton.style";
-import { darkTheme, lightTheme } from "@/themes";
+import { resolveTheme } from "@/themes";
 import { FaRegMoon } from "react-icons/fa";
 import { IoSunnyOutline } from "react-icons/io5";
 
 export default function ChangeThemeButton() {
   const { setTheme, theme } = useTheme();
 
-  const currentTheme = theme === "dark" ? darkTheme : lightTheme;
+  const currentTheme = resolveTheme(theme);
 
   const handleThemeChange = (theme: "dark" | "light") => {
     setTheme(theme);

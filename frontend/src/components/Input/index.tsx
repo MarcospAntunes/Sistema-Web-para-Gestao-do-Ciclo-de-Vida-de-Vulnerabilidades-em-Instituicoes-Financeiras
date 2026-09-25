@@ -1,6 +1,6 @@
 "use client";
 
-import { darkTheme, lightTheme } from "@/themes";
+import { resolveTheme } from "@/themes";
 import { InputStyled, LabelStyle } from "./Input.style";
 import { useTheme } from "@/hooks";
 import InputProps from "./Input.type";
@@ -19,11 +19,12 @@ export default function Input({
   value,
 }: InputProps) {
   const { theme } = useTheme();
+  const currentTheme = resolveTheme(theme);
 
   return (
-    <LabelStyle theme={theme === "dark" ? darkTheme : lightTheme}>
+    <LabelStyle theme={currentTheme}>
       <p>{labelText}</p>
-      <InputStyled theme={theme === "dark" ? darkTheme : lightTheme}>
+      <InputStyled theme={currentTheme}>
         <Icon />
         <input
           minLength={minLength}

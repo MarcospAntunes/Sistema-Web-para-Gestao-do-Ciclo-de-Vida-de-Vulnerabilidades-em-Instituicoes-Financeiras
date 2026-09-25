@@ -2,88 +2,38 @@
 
 import { Button, ChangeThemeButton, Input, Logo } from "@/components";
 import { LoginViewStyle } from "./LoginView.style";
-import { useTheme } from "@/hooks";
-import { darkTheme, lightTheme } from "@/themes";
+import { useTheme, useAuthForm } from "@/hooks";
+import { resolveTheme } from "@/themes";
 import { MdOutlineEmail } from "react-icons/md";
 import { TbLockPassword } from "react-icons/tb";
-import { useState } from "react";
-import { login, register } from "@/api";
 
 export default function LoginView() {
   const { theme } = useTheme();
-  const [form, setForm] = useState<"login" | "register">("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [registerName, setRegisterName] = useState("");
-  const [registerEmail, setRegisterEmail] = useState("");
-  const [registerPassword, setRegisterPassword] = useState("");
-  const [agreeTerms, setAgreeTerms] = useState(false);
-
-  const handleForm = (form: "login" | "register") => {
-    setForm(form);
-    setError("");
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const result = await login(email, password);
-
-      if (result?.success) {
-        window.location.href = "/dashboard";
-      } else {
-        setError(result?.error || "Erro ao realizar login");
-      }
-    } catch {
-      setError("Erro de conexão com o servidor");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    if (!agreeTerms) {
-      setError("Você precisa concordar com a política de uso.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const result = await register(registerName, registerEmail, registerPassword);
-
-      if (result?.success) {
-        // Auto-login após registro bem-sucedido
-        const loginResult = await login(registerEmail, registerPassword);
-
-        if (loginResult?.success) {
-          window.location.href = "/dashboard";
-        } else {
-          // Registro ok, redireciona para login
-          setForm("login");
-          setEmail(registerEmail);
-          setError("");
-        }
-      } else {
-        setError(result?.error || "Erro ao criar conta");
-      }
-    } catch {
-      setError("Erro de conexão com o servidor");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const currentTheme = resolveTheme(theme);
+  
+  const {
+    form,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    error,
+    loading,
+    registerName,
+    setRegisterName,
+    registerEmail,
+    setRegisterEmail,
+    registerPassword,
+    setRegisterPassword,
+    agreeTerms,
+    setAgreeTerms,
+    handleFormChange,
+    handleLogin,
+    handleRegister,
+  } = useAuthForm();
 
   return (
-    <LoginViewStyle theme={theme === "dark" ? darkTheme : lightTheme}>
+    <LoginViewStyle theme={currentTheme}>
       <section>
         <Logo />
         <div>
@@ -110,13 +60,13 @@ export default function LoginView() {
             <Button
               text="Entrar"
               type="button"
-              onClick={() => handleForm("login")}
+              onClick={() => handleFormChange("login")}
               className={form == "login" ? "active" : "disabled"}
             />
             <Button
               text="Registrar"
               type="button"
-              onClick={() => handleForm("register")}
+              onClick={() => handleFormChange("register")}
               className={form == "register" ? "active" : "disabled"}
             />
           </div>
@@ -197,7 +147,7 @@ export default function LoginView() {
               <Button text={loading ? "Criando conta..." : "Criar conta"} type="submit" />
               <a
                 href="#"
-                onClick={() => handleForm("login")}
+                onClick={() => handleFormChange("login")}
                 style={{ width: "100%" }}
               >
                 Já possui conta?

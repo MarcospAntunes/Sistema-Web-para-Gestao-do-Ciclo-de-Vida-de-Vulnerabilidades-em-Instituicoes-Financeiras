@@ -1,15 +1,16 @@
 "use client";
 
-import { darkTheme, lightTheme } from "@/themes";
+import { resolveTheme } from "@/themes";
 import LogoStyle from "./Logo.style";
 import { PiSecurityCamera } from "react-icons/pi";
 import { useTheme } from "@/hooks";
 
 export default function Logo() {
   const { theme } = useTheme();
+  const currentTheme = resolveTheme(theme);
 
   return (
-    <LogoStyle theme={theme === "dark" ? darkTheme : lightTheme}>
+    <LogoStyle theme={currentTheme}>
       <span>
         <PiSecurityCamera />
       </span>
