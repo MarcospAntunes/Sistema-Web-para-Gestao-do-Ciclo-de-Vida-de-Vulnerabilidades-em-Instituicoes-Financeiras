@@ -1,7 +1,7 @@
 "use client";
 
 import { resolveTheme } from "@/themes";
-import { InputStyled, LabelStyle } from "./Input.style";
+import { InputStyled, LabelStyle, ErrorMessage } from "./Input.style";
 import { useTheme } from "@/hooks";
 import InputProps from "./Input.type";
 
@@ -17,6 +17,7 @@ export default function Input({
   Icon,
   name,
   value,
+  error,
 }: InputProps) {
   const { theme } = useTheme();
   const currentTheme = resolveTheme(theme);
@@ -24,7 +25,7 @@ export default function Input({
   return (
     <LabelStyle theme={currentTheme}>
       <p>{labelText}</p>
-      <InputStyled theme={currentTheme}>
+      <InputStyled theme={currentTheme} $hasError={!!error}>
         <Icon />
         <input
           minLength={minLength}
@@ -38,6 +39,7 @@ export default function Input({
           value={value}
         />
       </InputStyled>
+      {error && <ErrorMessage theme={currentTheme}>{error}</ErrorMessage>}
     </LabelStyle>
   );
 }

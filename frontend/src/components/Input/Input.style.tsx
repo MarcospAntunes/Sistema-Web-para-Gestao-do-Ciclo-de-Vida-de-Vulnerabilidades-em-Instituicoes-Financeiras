@@ -15,13 +15,13 @@ const LabelStyle = styled.label<themeType>`
   }
 `;
 
-const InputStyled = styled.span<themeType>`
+const InputStyled = styled.span<themeType & { $hasError?: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
   height: 44px;
   gap: 8px;
-  border: 1px solid ${({ theme }) => theme.input};
+  border: 1px solid ${({ theme, $hasError }) => ($hasError ? theme.critical : theme.input)};
   border-radius: 8px;
   padding: 12px;
   transition:
@@ -29,8 +29,8 @@ const InputStyled = styled.span<themeType>`
     box-shadow 0.2s ease;
 
   &:focus-within {
-    border-color: ${({ theme }) => theme.primary} !important;
-    box-shadow: 0 0 0 2px ${({ theme }) => theme["primary-soft"]};
+    border-color: ${({ theme, $hasError }) => ($hasError ? theme.critical : theme.primary)} !important;
+    box-shadow: 0 0 0 2px ${({ theme, $hasError }) => ($hasError ? theme["critical-soft"] : theme["primary-soft"])};
   }
 
   input {
@@ -41,4 +41,13 @@ const InputStyled = styled.span<themeType>`
   }
 `;
 
-export { InputStyled, LabelStyle };
+const ErrorMessage = styled.p<themeType>`
+  color: ${({ theme }) => theme.critical} !important;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  font-weight: 400;
+  letter-spacing: normal;
+`;
+
+export { InputStyled, LabelStyle, ErrorMessage };
+

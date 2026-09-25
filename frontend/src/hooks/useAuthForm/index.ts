@@ -5,7 +5,7 @@ export function useAuthForm() {
   const [form, setForm] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; general?: string }>({});
   const [loading, setLoading] = useState(false);
   const [registerName, setRegisterName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
@@ -14,12 +14,46 @@ export function useAuthForm() {
 
   const handleFormChange = (newForm: "login" | "register") => {
     setForm(newForm);
-    setError("");
+    setErrors({});
+  };
+
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const isValidPassword = (password: string) => {
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const isValidLength = password.length >= 8;
+    return hasUpperCase && hasNumber && hasSpecialChar && isValidLength;
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setErrors({});
+
+    let hasError = false;
+    const newErrors: typeof errors = {};
+
+    if (!email) {
+      newErrors.email = "Email é obrigatório.";
+      hasError = true;
+    } else if (!isValidEmail(email)) {
+      newErrors.email = "Por favor, insira um endereço de e-mail válido.";
+      hasError = true;
+    }
+
+    if (!password) {
+      newErrors.password = "A senha é obrigatória.";
+      hasError = true;
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -28,10 +62,10 @@ export function useAuthForm() {
       if (result?.success) {
         window.location.href = "/dashboard";
       } else {
-        setError(result?.error || "Erro ao realizar login");
+        setErrors({ general: result?.error || "Erro ao realizar login" });
       }
     } catch {
-      setError("Erro de conexão com o servidor");
+      setErrors({ general: "Erro de conexão com o servidor" });
     } finally {
       setLoading(false);
     }
@@ -39,10 +73,39 @@ export function useAuthForm() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setErrors({});
+
+    let hasError = false;
+    const newErrors: typeof errors = {};
+
+    if (!registerName || registerName.length < 3 || registerName.length > 255) {
+      newErrors.name = "O nome deve ter entre 3 e 255 caracteres.";
+      hasError = true;
+    }
+
+    if (!registerEmail) {
+      newErrors.email = "Email é obrigatório.";
+      hasError = true;
+    } else if (!isValidEmail(registerEmail)) {
+      newErrors.email = "Por favor, insira um endereço de e-mail válido.";
+      hasError = true;
+    }
+
+    if (!registerPassword) {
+      newErrors.password = "A senha é obrigatória.";
+      hasError = true;
+    } else if (!isValidPassword(registerPassword)) {
+      newErrors.password = "A senha deve ter pelo menos 8 dígitos, pelo menos uma letra maiúscula, pelo menos um número e pelo menos um caractere especial.";
+      hasError = true;
+    }
 
     if (!agreeTerms) {
-      setError("Você precisa concordar com a política de uso.");
+      newErrors.general = "Você precisa concordar com a política de uso.";
+      hasError = true;
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
       return;
     }
 
@@ -58,13 +121,13 @@ export function useAuthForm() {
         } else {
           setForm("login");
           setEmail(registerEmail);
-          setError("");
+          setErrors({});
         }
       } else {
-        setError(result?.error || "Erro ao criar conta");
+        setErrors({ general: result?.error || "Erro ao criar conta" });
       }
     } catch {
-      setError("Erro de conexão com o servidor");
+      setErrors({ general: "Erro de conexão com o servidor" });
     } finally {
       setLoading(false);
     }
@@ -76,7 +139,7 @@ export function useAuthForm() {
     setEmail,
     password,
     setPassword,
-    error,
+    errors,
     loading,
     registerName,
     setRegisterName,

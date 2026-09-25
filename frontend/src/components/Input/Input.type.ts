@@ -13,6 +13,7 @@ type InputProps = {
   placeholder?: string | undefined;
   labelText: string;
   Icon: IconType;
+  error?: string | undefined;
 };
 
 export default InputProps;

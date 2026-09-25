@@ -17,7 +17,7 @@ export default function LoginView() {
     setEmail,
     password,
     setPassword,
-    error,
+    errors,
     loading,
     registerName,
     setRegisterName,
@@ -71,7 +71,7 @@ export default function LoginView() {
             />
           </div>
           {form == "login" ? (
-            <form onSubmit={handleLogin}>
+            <form onSubmit={handleLogin} noValidate>
               <Input
                 Icon={MdOutlineEmail}
                 placeholder="nome@empresa.com"
@@ -80,6 +80,7 @@ export default function LoginView() {
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                error={errors.email}
               />
               <Input
                 Icon={TbLockPassword}
@@ -89,8 +90,9 @@ export default function LoginView() {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                error={errors.password}
               />
-              {error && <p style={{ color: "#ef4444", fontSize: "0.875rem" }}>{error}</p>}
+              {errors.general && <p style={{ color: "#ef4444", fontSize: "0.875rem" }}>{errors.general}</p>}
               <div>
                 <label htmlFor="remember-me-input" id="remember-me-label">
                   <input id="remember-me-input" type="checkbox" />
@@ -101,7 +103,7 @@ export default function LoginView() {
               <Button text={loading ? "Entrando..." : "Entrar"} type="submit" />
             </form>
           ) : (
-            <form onSubmit={handleRegister}>
+            <form onSubmit={handleRegister} noValidate>
               <Input
                 Icon={MdOutlineEmail}
                 placeholder="Seu nome completo"
@@ -110,6 +112,7 @@ export default function LoginView() {
                 name="name"
                 value={registerName}
                 onChange={(e) => setRegisterName(e.target.value)}
+                error={errors.name}
               />
               <Input
                 Icon={MdOutlineEmail}
@@ -119,6 +122,7 @@ export default function LoginView() {
                 name="email"
                 value={registerEmail}
                 onChange={(e) => setRegisterEmail(e.target.value)}
+                error={errors.email}
               />
               <Input
                 Icon={TbLockPassword}
@@ -128,8 +132,9 @@ export default function LoginView() {
                 name="password"
                 value={registerPassword}
                 onChange={(e) => setRegisterPassword(e.target.value)}
+                error={errors.password}
               />
-              {error && <p style={{ color: "#ef4444", fontSize: "0.875rem" }}>{error}</p>}
+              {errors.general && <p style={{ color: "#ef4444", fontSize: "0.875rem" }}>{errors.general}</p>}
               <div>
                 <label htmlFor="agree-terms-input" id="remember-me-label">
                   <input
