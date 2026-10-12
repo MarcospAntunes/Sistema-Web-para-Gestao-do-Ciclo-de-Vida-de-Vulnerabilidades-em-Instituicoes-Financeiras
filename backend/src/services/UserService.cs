@@ -111,7 +111,9 @@ namespace Services
 
     public async Task<ResponseUserDTO> LoginUser(LoginDTO dto, HttpContext httpContext)
     {
-      User? user = await _context.Users.FirstOrDefaultAsync(user => user.Email == dto.Email);
+      User? user = await _context.Users
+        .Include(u => u.Role)
+        .FirstOrDefaultAsync(user => user.Email == dto.Email);
       if (user is null) throw new Exception("Usuário ou senha incorretos!");
 
       bool checkPassword = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);

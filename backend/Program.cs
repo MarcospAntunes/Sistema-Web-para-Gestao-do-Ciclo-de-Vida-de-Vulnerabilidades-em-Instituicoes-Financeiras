@@ -78,6 +78,22 @@ Builder.Services.AddControllers();
 Builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
 WebApplication App = Builder.Build();
+
+using (var scope = App.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<VulnTrackerDbContext>();
+        context.Database.EnsureCreated();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred creating the DB.");
+    }
+}
+
 App.UseExceptionHandler("/error");
 App.UseCors("myAllowSpecificOrigins");
 App.UseRouting();

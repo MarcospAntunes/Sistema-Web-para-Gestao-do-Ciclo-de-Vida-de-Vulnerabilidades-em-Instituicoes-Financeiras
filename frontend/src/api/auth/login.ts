@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 
 export default async function login(email: string, password: string) {
-  const API_URL = process.env.API_URL || "http://localhost:8080";
+  const API_URL = process.env.API_URL || "http://127.0.0.1:8080";
   const TOKEN_MAX_AGE_SECONDS = 60 * 120;
 
   try {
@@ -15,7 +15,10 @@ export default async function login(email: string, password: string) {
       body: JSON.stringify({ email, password }),
     });
 
-    if(!req.ok) throw new Error("Credenciais inválidas");
+    if (!req.ok) {
+      const errorData = await req.json().catch(() => null);
+      throw new Error(errorData?.message || "Credenciais inválidas");
+    }
 
     const setCookieHeader = req.headers.get("set-cookie");
 
@@ -35,7 +38,8 @@ export default async function login(email: string, password: string) {
       }
     }
 
-    const data = await req.json();
+    const text = await req.text();
+    const data = text ? JSON.parse(text) : {};
     return { success: true, data };
   } catch (e) {
     const message = e instanceof Error ? e.message : "Erro ao realizar login";

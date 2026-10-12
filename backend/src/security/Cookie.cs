@@ -15,8 +15,7 @@ namespace Security
         new Claim(ClaimTypes.Name, user.Name),
         new Claim(ClaimTypes.Email, user.Email),
         new Claim(ClaimTypes.Role, user.RoleId.ToString()),
-
-        new Claim("AccessLevel", user.Role.AccessLevel.ToString()) 
+        new Claim("AccessLevel", (user.Role?.AccessLevel ?? 0).ToString())
       };
 
       var claimsIdentify = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
