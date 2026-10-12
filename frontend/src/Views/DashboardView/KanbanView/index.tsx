@@ -1,128 +1,371 @@
 "use client";
 
+import React, { useState, useRef } from "react";
 import { useTheme } from "@/hooks";
 import { resolveTheme } from "@/themes";
 import { KanbanStyle } from "./KanbanView.style";
+import { initialTasks, initialColumns } from "./mockData";
+import { KanbanTask, TaskStatus } from "./types";
+import TaskModal from "./TaskModal";
+import { FiSearch, FiServer, FiArrowDown } from "react-icons/fi";
 
-const columns = [
-  {
-    id: "backlog",
-    title: "Backlog",
-    count: 42,
-    color: "#9B98B0",
-    cards: [
-      {
-        id: "VUL-2455",
-        title: "Política de senha sem complexidade mínima",
-        system: "portal-interno",
-        risk: "Média",
-        cvss: 6.4,
-        assignee: { name: "João P.", initials: "JP" }
-      }
-    ]
-  },
-  {
-    id: "analysis",
-    title: "Em análise",
-    count: 18,
-    color: "#F3BB00",
-    cards: [
-      {
-        id: "VUL-2479",
-        title: "Injeção SQL no endpoint de transações",
-        system: "gateway-transacoes",
-        risk: "Crítica",
-        cvss: 9.1,
-        assignee: { name: "Rafael M.", initials: "RM" }
-      }
-    ]
-  },
-  {
-    id: "execution",
-    title: "Em execução",
-    count: 12,
-    color: "#D775F4",
-    cards: [
-      {
-        id: "VUL-2481",
-        title: "Execução remota de código no Apache Struts",
-        system: "api-pagamentos-01",
-        risk: "Crítica",
-        cvss: 9.8,
-        assignee: { name: "Ana C.", initials: "AC" }
-      }
-    ]
-  },
-  {
-    id: "validation",
-    title: "Validação",
-    count: 7,
-    color: "#5AB7F9",
-    cards: [
-      {
-        id: "VUL-2468",
-        title: "Biblioteca OpenSSL desatualizada",
-        system: "core-banking-02",
-        risk: "Alta",
-        cvss: 7.5,
-        assignee: { name: "Carla S.", initials: "CS" }
-      }
-    ]
-  }
-];
+const statusLabels: Record<TaskStatus, string> = {
+  backlog: "Backlog",
+  analysis: "Em análise",
+  execution: "Em execução",
+  validation: "Validação",
+  resolved: "Resolvido"
+};
 
 export default function KanbanView() {
   const { theme } = useTheme();
   const currentTheme = resolveTheme(theme);
 
+  const [tasks, setTasks] = useState<KanbanTask[]>(initialTasks);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Drag and drop states
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverColumnId, setDragOverColumnId] = useState<TaskStatus | null>(null);
+  const [dragOverCardId, setDragOverCardId] = useState<string | null>(null);
+  const justDroppedRef = useRef(false);
+  const dropTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
+  const currentDraggedTask = tasks.find((t) => t.id === draggedTaskId) || null;
+
+  const handleCardClick = (task: KanbanTask) => {
+    // If a drag/drop operation finished in the last 150ms, ignore trailing mouseup click
+    if (justDroppedRef.current) return;
+    setSelectedTaskId(task.id);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedTaskId(null);
+  };
+
+  const moveTaskStatus = (
+    taskId: string,
+    newStatus: TaskStatus,
+    targetTaskId?: string,
+    viaDrag = false
+  ) => {
+    const now = new Date();
+    const formattedDate = `${now.toLocaleDateString("pt-BR")} ${now.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit"
+    })}`;
+
+    setTasks((prevTasks) => {
+      const taskIndex = prevTasks.findIndex((t) => t.id === taskId);
+      if (taskIndex === -1) return prevTasks;
+
+      const current = prevTasks[taskIndex];
+      const isStatusChanged = current.status !== newStatus;
+
+      const updatedTask: KanbanTask = isStatusChanged
+        ? {
+            ...current,
+            status: newStatus,
+            statusLabel: statusLabels[newStatus],
+            history: [
+              {
+                id: `hist-${Date.now()}`,
+                timestamp: formattedDate,
+                author: "Analista SecOps",
+                authorInitials: "AS",
+                action: viaDrag
+                  ? `Card arrastado no quadro de '${current.statusLabel}' para '${statusLabels[newStatus]}'.`
+                  : `Status alterado de '${current.statusLabel}' para '${statusLabels[newStatus]}'.`
+              },
+              ...current.history
+            ]
+          }
+        : current;
+
+      const listWithoutDragged = prevTasks.filter((t) => t.id !== taskId);
+
+      if (targetTaskId && targetTaskId !== taskId) {
+        const targetIndex = listWithoutDragged.findIndex((t) => t.id === targetTaskId);
+        if (targetIndex !== -1) {
+          const newList = [...listWithoutDragged];
+          newList.splice(targetIndex, 0, updatedTask);
+          return newList;
+        }
+      }
+
+      // If moving to a new column without target card, append at end of that status group
+      return [...listWithoutDragged, updatedTask];
+    });
+  };
+
+  const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
+    moveTaskStatus(taskId, newStatus, undefined, false);
+  };
+
+  const handleAddComment = (taskId: string, commentText: string) => {
+    const now = new Date();
+    const formattedDate = `${now.toLocaleDateString("pt-BR")} ${now.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit"
+    })}`;
+
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => {
+        if (t.id === taskId) {
+          const newHistoryItem = {
+            id: `hist-${Date.now()}`,
+            timestamp: formattedDate,
+            author: "Analista SecOps",
+            authorInitials: "AS",
+            action: "Nota técnica de acompanhamento registrada.",
+            comment: commentText
+          };
+
+          return {
+            ...t,
+            history: [newHistoryItem, ...t.history]
+          };
+        }
+        return t;
+      })
+    );
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, cardId: string) => {
+    isDraggingRef.current = true;
+    setDraggedTaskId(cardId);
+    e.dataTransfer.setData("text/plain", cardId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTaskId(null);
+    setDragOverColumnId(null);
+    setDragOverCardId(null);
+    // Brief timeout so click event on card is suppressed
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 100);
+  };
+
+  const handleDragOverColumn = (e: React.DragEvent, columnId: TaskStatus) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverColumnId !== columnId) {
+      setDragOverColumnId(columnId);
+    }
+  };
+
+  const handleDragLeaveColumn = (e: React.DragEvent, columnId: TaskStatus) => {
+    // Only reset if leaving the column element itself
+    const relatedTarget = e.relatedTarget as HTMLElement | null;
+    const currentTarget = e.currentTarget as HTMLElement;
+    if (!currentTarget.contains(relatedTarget)) {
+      if (dragOverColumnId === columnId) {
+        setDragOverColumnId(null);
+      }
+    }
+  };
+
+  const handleDropColumn = (e: React.DragEvent, columnId: TaskStatus) => {
+    e.preventDefault();
+    const cardId = e.dataTransfer.getData("text/plain") || draggedTaskId;
+    if (cardId) {
+      moveTaskStatus(cardId, columnId, undefined, true);
+    }
+    setDraggedTaskId(null);
+    setDragOverColumnId(null);
+    setDragOverCardId(null);
+  };
+
+  const handleDragOverCard = (e: React.DragEvent, targetCardId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverCardId !== targetCardId) {
+      setDragOverCardId(targetCardId);
+    }
+  };
+
+  const handleDragLeaveCard = (e: React.DragEvent, targetCardId: string) => {
+    e.stopPropagation();
+    if (dragOverCardId === targetCardId) {
+      setDragOverCardId(null);
+    }
+  };
+
+  const handleDropOnCard = (
+    e: React.DragEvent,
+    columnId: TaskStatus,
+    targetCardId: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const cardId = e.dataTransfer.getData("text/plain") || draggedTaskId;
+    if (cardId) {
+      moveTaskStatus(cardId, columnId, targetCardId, true);
+    }
+    setDraggedTaskId(null);
+    setDragOverColumnId(null);
+    setDragOverCardId(null);
+  };
+
+  // Filter tasks based on search input
+  const filteredTasks = tasks.filter((task) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      task.id.toLowerCase().includes(term) ||
+      task.title.toLowerCase().includes(term) ||
+      task.cve.toLowerCase().includes(term) ||
+      task.system.toLowerCase().includes(term) ||
+      task.risk.toLowerCase().includes(term) ||
+      task.assignee.name.toLowerCase().includes(term)
+    );
+  });
+
+  const columns = initialColumns.map((col) => ({
+    ...col,
+    cards: filteredTasks.filter((t) => t.status === col.id)
+  }));
+
   return (
     <KanbanStyle theme={currentTheme}>
       <div className="header">
-        <span className="subtitle">FLUXO DE TRATAMENTO</span>
-        <h1>Kanban</h1>
-        <p>Acompanhe cada vulnerabilidade até sua validação.</p>
+        <div className="header-info">
+          <span className="subtitle">FLUXO DE TRATAMENTO & REMEDIAÇÃO • DRAG & DROP</span>
+          <h1>Kanban de Vulnerabilidades</h1>
+          <p>
+            Arraste os cards entre as colunas para atualizar o status do ciclo de vida, ou clique no card para ver as informações completas.
+          </p>
+        </div>
+
+        <div className="header-actions">
+          <div className="search-box">
+            <FiSearch />
+            <input
+              type="text"
+              placeholder="Buscar por ID, CVE, sistema..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="total-pill">
+            Total: <strong>{filteredTasks.length}</strong> itens
+          </div>
+        </div>
       </div>
 
       <div className="kanban-board">
-        {columns.map(column => (
-          <div className="kanban-column" key={column.id}>
-            <div className="column-header">
-              <div className="column-title">
-                <div className="dot" style={{ backgroundColor: column.color }}></div>
-                {column.title}
-              </div>
-              <div className="column-count">{column.count}</div>
-            </div>
-            
-            <div className="column-content">
-              {column.cards.map(card => (
-                <div className="kanban-card" key={card.id}>
-                  <div className="card-top">
-                    <span className="card-id">{card.id}</span>
-                    <span className={`badge-risk ${card.risk.toLowerCase()}`}>
-                      {card.risk}
-                    </span>
-                  </div>
-                  <div className="card-body">
-                    <div className="card-title">{card.title}</div>
-                    <div className="card-system">{card.system}</div>
-                  </div>
-                  <div className="card-footer">
-                    <div className="assignee">
-                      <div className="avatar-sm">{card.assignee.initials}</div>
-                      <span className="name">{card.assignee.name}</span>
-                    </div>
-                    <div className="cvss">
-                      <span>CVSS</span>
-                      {card.cvss}
-                    </div>
-                  </div>
+        {columns.map((column) => {
+          const isColumnHovered = dragOverColumnId === column.id && Boolean(draggedTaskId);
+          const isCrossColumn =
+            isColumnHovered && currentDraggedTask && currentDraggedTask.status !== column.id;
+
+          return (
+            <div
+              className={`kanban-column ${isColumnHovered ? "drag-over" : ""}`}
+              key={column.id}
+              onDragOver={(e) => handleDragOverColumn(e, column.id)}
+              onDragLeave={(e) => handleDragLeaveColumn(e, column.id)}
+              onDrop={(e) => handleDropColumn(e, column.id)}
+            >
+              <div className="column-header">
+                <div className="column-title">
+                  <div className="dot" style={{ backgroundColor: column.color }} />
+                  {column.title}
                 </div>
-              ))}
+                <div className="column-count">{column.cards.length}</div>
+              </div>
+
+              <div className="column-content">
+                {isCrossColumn && (
+                  <div className="drop-zone">
+                    <FiArrowDown /> Mover para {column.title}
+                  </div>
+                )}
+
+                {column.cards.length === 0 && !isCrossColumn ? (
+                  <div className="empty-column">Nenhuma vulnerabilidade neste status</div>
+                ) : (
+                  column.cards.map((card) => {
+                    const isDragging = draggedTaskId === card.id;
+                    const isTargetCard = dragOverCardId === card.id && !isDragging;
+
+                    return (
+                      <div
+                        className={`kanban-card ${isDragging ? "is-dragging" : ""} ${
+                          isTargetCard ? "drag-over-card" : ""
+                        }`}
+                        key={card.id}
+                        draggable={true}
+                        onDragStart={(e) => handleDragStart(e, card.id)}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={(e) => handleDragOverCard(e, card.id)}
+                        onDragLeave={(e) => handleDragLeaveCard(e, card.id)}
+                        onDrop={(e) => handleDropOnCard(e, column.id, card.id)}
+                        onClick={() => handleCardClick(card)}
+                        title="Arraste para mover de coluna ou clique para ver detalhes completos"
+                      >
+                        <div className="card-top">
+                          <div className="card-id-group">
+                            <span className="card-id">{card.id}</span>
+                            {card.cve && <span className="card-cve">{card.cve}</span>}
+                          </div>
+                          <span className={`badge-risk ${card.risk.toLowerCase()}`}>
+                            {card.risk}
+                          </span>
+                        </div>
+
+                        <div className="card-body">
+                          <div className="card-title">{card.title}</div>
+                          <div className="card-system">
+                            <FiServer size={11} />
+                            {card.system}
+                          </div>
+                        </div>
+
+                        {card.tags && card.tags.length > 0 && (
+                          <div className="card-tags">
+                            {card.tags.slice(0, 3).map((tag) => (
+                              <span className="card-tag" key={tag}>
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="card-footer">
+                          <div className="assignee">
+                            <div className="avatar-sm">{card.assignee.initials}</div>
+                            <span className="name">{card.assignee.name}</span>
+                          </div>
+                          <div className="cvss">
+                            <span>CVSS</span>
+                            {card.cvss.toFixed(1)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* Task Full Details Modal */}
+      <TaskModal
+        task={selectedTask}
+        isOpen={Boolean(selectedTask)}
+        onClose={handleCloseModal}
+        onStatusChange={handleStatusChange}
+        onAddComment={handleAddComment}
+      />
     </KanbanStyle>
   );
 }
