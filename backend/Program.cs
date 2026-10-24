@@ -105,7 +105,7 @@ if (App.Environment.IsDevelopment())
   App.UseSwagger();
   App.UseSwaggerUI(c =>
   {
-    c.SwaggerEndpoint("./v1/swagger.json", "SuInvest API v1");
+    c.SwaggerEndpoint("./v1/swagger.json", "VulnTracker API v1");
     c.RoutePrefix = "swagger";
   });
 }

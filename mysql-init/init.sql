@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS `Vulnerabilities` (
   `Cve`             VARCHAR(20)    NOT NULL,
   `CveScore`        DECIMAL(4,1)   NOT NULL,
   `CvssVersion`     VARCHAR(10)    NOT NULL,
+  `CvssVector`      VARCHAR(255)   NULL,
   `Status`          INT            NOT NULL DEFAULT 0,
   `Severity`        INT            NOT NULL DEFAULT 0,
   `Priority`        INT            NOT NULL DEFAULT 0,
@@ -68,10 +69,37 @@ CREATE TABLE IF NOT EXISTS `Vulnerabilities` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -----------------------------------------------------------
--- Seed: Role "Admin" (AccessLevel = 3)
+-- Tabela: VulnerabilityHistories (Trilha de Auditoria)
+-- -----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `VulnerabilityHistories` (
+  `Id`              INT            NOT NULL AUTO_INCREMENT,
+  `VulnerabilityId` INT            NOT NULL,
+  `UserId`          INT            NOT NULL,
+  `Action`          VARCHAR(500)   NOT NULL,
+  `Comment`         VARCHAR(2000)  NULL,
+  `OldStatus`       VARCHAR(50)    NULL,
+  `NewStatus`       VARCHAR(50)    NULL,
+  `CreatedAt`       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Id`),
+  CONSTRAINT `FK_History_Vulnerability`
+    FOREIGN KEY (`VulnerabilityId`) REFERENCES `Vulnerabilities` (`Id`)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_History_User`
+    FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`)
+    ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- -----------------------------------------------------------
+-- Seed: Roles
 -- -----------------------------------------------------------
 INSERT IGNORE INTO `Roles` (`Id`, `Name`, `AccessLevel`)
 VALUES (1, 'Admin', 3);
+
+INSERT IGNORE INTO `Roles` (`Id`, `Name`, `AccessLevel`)
+VALUES (2, 'Analista', 2);
+
+INSERT IGNORE INTO `Roles` (`Id`, `Name`, `AccessLevel`)
+VALUES (3, 'Visualizador', 1);
 
 -- -----------------------------------------------------------
 -- Seed: Usuario Administrador

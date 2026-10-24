@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Security;
+using Utils;
 
 namespace Services
 {
@@ -35,11 +36,14 @@ namespace Services
 
       GetUserDTO? currentUser = await _context.Users
         .AsNoTracking()
+        .Include(u => u.Role)
         .Where(u => u.Id == id)
         .Select(u => new GetUserDTO(
           u.Id,
           u.Name,
-          u.Email
+          u.Email,
+          u.RoleId,
+          u.Role != null ? u.Role.Name : "Sem perfil"
         ))
         .FirstOrDefaultAsync();
 
@@ -50,20 +54,45 @@ namespace Services
 
     public async Task<IEnumerable<GetUserDTO>> GetAll(ClaimsPrincipal user)
     {
-      int userId = GetAuthenticatedUserId(user);
-      var authResult = Auth.CanAccessUser(user, userId);
+      IActionResult? authResult = Auth.IsLogged(user);
       if (authResult is not null) throw new Exception("Invalid authentication or access denied.");
 
       IEnumerable<GetUserDTO> users = await _context.Users
         .AsNoTracking()
+        .Include(u => u.Role)
         .Select(u => new GetUserDTO(
           u.Id,
           u.Name,
-          u.Email
+          u.Email,
+          u.RoleId,
+          u.Role != null ? u.Role.Name : "Sem perfil"
         ))
         .ToListAsync();
 
       return users;
+    }
+
+    public async Task LogoutAsync(HttpContext httpContext)
+    {
+      await Microsoft.AspNetCore.Authentication.AuthenticationHttpContextExtensions.SignOutAsync(
+        httpContext,
+        Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme
+      );
+    }
+
+    public async Task<bool> DeleteAsync(ClaimsPrincipal user, int id)
+    {
+      if (!VerifyRole.IsHighLevel(user))
+      {
+        throw new Exception("Apenas administradores podem excluir usuários.");
+      }
+
+      User? userToDelete = await _context.Users.FindAsync(id);
+      if (userToDelete is null) throw new Exception("Usuário não encontrado.");
+
+      _context.Users.Remove(userToDelete);
+      await _context.SaveChangesAsync();
+      return true;
     }
 
     public async Task<ResponseUserDTO> CreateAsync(CreateUserDTO dto, ClaimsPrincipal user)

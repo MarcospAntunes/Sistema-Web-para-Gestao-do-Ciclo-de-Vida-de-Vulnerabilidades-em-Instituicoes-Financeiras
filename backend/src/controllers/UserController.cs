@@ -75,12 +75,62 @@ namespace Controllers
       }
     }
 
+    [HttpGet]
+    [HttpGet("get-all")]
+    public async Task<IActionResult> GetAll()
+    {
+      try
+      {
+        var users = await _userService.GetAll(User);
+        return CustomResults.Success(users);
+      }
+      catch (Exception error)
+      {
+        return CustomResults.BadRequest(error.Message);
+      }
+    }
+
     [HttpGet("logged-user")]
     public async Task<IActionResult> GetUserLogged()
     {
-     var user = await _userService.GetUserLogged(User);
+      try
+      {
+        var user = await _userService.GetUserLogged(User);
+        return CustomResults.Success(user);
+      }
+      catch (Exception error)
+      {
+        return CustomResults.BadRequest(error.Message);
+      }
+    }
 
-      return CustomResults.Success(user);
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+      try
+      {
+        await _userService.LogoutAsync(HttpContext);
+        return CustomResults.Success(true, "Logout realizado com sucesso.");
+      }
+      catch (Exception error)
+      {
+        return CustomResults.BadRequest(error.Message);
+      }
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(policy: "AdminOnly")]
+    public async Task<IActionResult> Delete(int id)
+    {
+      try
+      {
+        await _userService.DeleteAsync(User, id);
+        return CustomResults.Success(true, "Usuário removido com sucesso.");
+      }
+      catch (Exception error)
+      {
+        return CustomResults.BadRequest(error.Message);
+      }
     }
   }
 }

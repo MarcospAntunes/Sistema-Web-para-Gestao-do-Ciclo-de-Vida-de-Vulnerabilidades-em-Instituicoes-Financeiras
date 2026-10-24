@@ -27,7 +27,9 @@ namespace DTOs
   (
     int Id,
     string Name,
-    string Email
+    string Email,
+    int RoleId = 0,
+    string? RoleName = null
   );
 
   public record UpdateUserDTO
