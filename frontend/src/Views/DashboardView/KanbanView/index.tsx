@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useTheme } from "@/hooks";
 import { resolveTheme } from "@/themes";
 import { KanbanStyle } from "./KanbanView.style";
 import { initialTasks, initialColumns } from "./mockData";
 import { KanbanTask, TaskStatus } from "./types";
+import { mapBackendToKanban, statusToStatusEnum, BackendVulnerability } from "./mapper";
+import { getVulnerabilities, updateVulnerabilityStatus, addVulnerabilityHistory } from "@/api/vulnerabilities";
 import TaskModal from "./TaskModal";
 import { FiSearch, FiServer, FiArrowDown } from "react-icons/fi";
 
@@ -24,6 +26,7 @@ export default function KanbanView() {
   const [tasks, setTasks] = useState<KanbanTask[]>(initialTasks);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Drag and drop states
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
@@ -31,6 +34,30 @@ export default function KanbanView() {
   const [dragOverCardId, setDragOverCardId] = useState<string | null>(null);
   const justDroppedRef = useRef(false);
   const dropTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isDraggingRef = useRef(false);
+
+  // Carrega vulnerabilidades reais do backend
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTasks() {
+      setIsLoading(true);
+      try {
+        const res = await getVulnerabilities();
+        if (res.success && res.data && res.data.length > 0 && isMounted) {
+          const mapped = (res.data as BackendVulnerability[]).map(mapBackendToKanban);
+          setTasks(mapped);
+        }
+      } catch (err) {
+        console.warn("Usando dados de demonstração devido a erro:", err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    loadTasks();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
   const currentDraggedTask = tasks.find((t) => t.id === draggedTaskId) || null;
@@ -56,6 +83,11 @@ export default function KanbanView() {
       hour: "2-digit",
       minute: "2-digit"
     })}`;
+
+    const numId = Number(taskId);
+    if (!isNaN(numId) && numId > 0) {
+      updateVulnerabilityStatus(numId, statusToStatusEnum(newStatus)).catch(console.error);
+    }
 
     setTasks((prevTasks) => {
       const taskIndex = prevTasks.findIndex((t) => t.id === taskId);
@@ -111,6 +143,11 @@ export default function KanbanView() {
       minute: "2-digit"
     })}`;
 
+    const numId = Number(taskId);
+    if (!isNaN(numId) && numId > 0) {
+      addVulnerabilityHistory(numId, { action: "Comentário adicionado", comment: commentText }).catch(console.error);
+    }
+
     setTasks((prevTasks) =>
       prevTasks.map((t) => {
         if (t.id === taskId) {
@@ -119,7 +156,7 @@ export default function KanbanView() {
             timestamp: formattedDate,
             author: "Analista SecOps",
             authorInitials: "AS",
-            action: "Nota técnica de acompanhamento registrada.",
+            action: "Adicionou um comentário",
             comment: commentText
           };
 

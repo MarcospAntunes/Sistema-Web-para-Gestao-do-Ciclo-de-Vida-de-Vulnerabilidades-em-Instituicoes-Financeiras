@@ -68,12 +68,21 @@ export default function Sidebar() {
               <span>Configurações</span>
             </div>
           </Link>
-          <Link href="/" className="nav-item">
+          <button 
+            type="button" 
+            onClick={async () => {
+              const { logout } = await import("@/api");
+              await logout();
+              window.location.href = "/";
+            }} 
+            className="nav-item"
+            style={{ background: "transparent", border: "none", width: "100%", cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}
+          >
             <div className="item-content">
               <FiLogOut />
               <span>Sair da conta</span>
             </div>
-          </Link>
+          </button>
         </div>
       </div>
 
