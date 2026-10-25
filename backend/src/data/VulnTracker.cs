@@ -15,6 +15,16 @@ namespace Data
     {
       base.OnModelCreating(modelBuilder);
 
+      modelBuilder.Entity<User>()
+        .HasOne(u => u.Role)
+        .WithMany()
+        .HasForeignKey(u => u.RoleId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+      modelBuilder.Entity<User>()
+        .HasIndex(u => u.Email)
+        .IsUnique();
+
       // Vulnerability tem dois FKs para User — precisa definir explicitamente
       modelBuilder.Entity<Vulnerability>()
         .HasOne(v => v.CreatedByUser)
@@ -28,6 +38,12 @@ namespace Data
         .HasForeignKey(v => v.AssignedUserId)
         .OnDelete(DeleteBehavior.Restrict);
 
+      // Índices usados pelos filtros da listagem, pelo stats e pelos relatórios de SLA
+      modelBuilder.Entity<Vulnerability>().HasIndex(v => v.Status);
+      modelBuilder.Entity<Vulnerability>().HasIndex(v => v.Severity);
+      modelBuilder.Entity<Vulnerability>().HasIndex(v => v.DueDate);
+      modelBuilder.Entity<Vulnerability>().HasIndex(v => v.Cve);
+
       // VulnerabilityHistory
       modelBuilder.Entity<VulnerabilityHistory>()
         .HasOne(h => h.Vulnerability)
@@ -40,6 +56,9 @@ namespace Data
         .WithMany()
         .HasForeignKey(h => h.UserId)
         .OnDelete(DeleteBehavior.Restrict);
+
+      modelBuilder.Entity<VulnerabilityHistory>()
+        .HasIndex(h => new { h.VulnerabilityId, h.CreatedAt });
     }
   }
 }
