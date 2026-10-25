@@ -2,17 +2,20 @@ import styled from "styled-components";
 import { themeType } from "@/themes/theme.type";
 
 export const TopbarStyle = styled.header<themeType>`
-  height: 72px;
+  max-height: 100px;
   display: flex;
+  flex-wrap: wrap-reverse;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  gap: 10px;
+  padding: 10px 24px;
   border-bottom: 1px solid ${({ theme }) => theme.border};
   background-color: ${({ theme }) => theme.background};
 
   .topbar-left {
     display: flex;
     align-items: center;
+    flex: 1;
     gap: 16px;
 
     .sidebar-toggle {
@@ -129,6 +132,12 @@ export const TopbarStyle = styled.header<themeType>`
           color: ${({ theme }) => theme["muted-foreground"]};
         }
       }
+    }
+  }
+
+  @media screen and (max-width: 768px) {
+    .topbar-left {
+      justify-content: center;
     }
   }
 `;

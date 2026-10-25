@@ -7,12 +7,12 @@ import { VulnerabilitiesStyle } from "./VulnerabilitiesView.style";
 import NewVulnerabilityModal from "./NewVulnerabilityModal";
 import ImportCsvModal from "../OverviewView/ImportCsvModal";
 import { getVulnerabilities, deleteVulnerability } from "@/api/vulnerabilities";
-import { 
-  FiSearch, 
-  FiPlus, 
-  FiFileText, 
-  FiTrash2, 
-  FiShield, 
+import {
+  FiSearch,
+  FiPlus,
+  FiFileText,
+  FiTrash2,
+  FiShield,
 } from "react-icons/fi";
 
 export default function VulnerabilitiesView() {
@@ -31,13 +31,15 @@ export default function VulnerabilitiesView() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const statusParam = statusFilter !== "all" ? Number(statusFilter) : undefined;
-      const severityParam = severityFilter !== "all" ? Number(severityFilter) : undefined;
+      const statusParam =
+        statusFilter !== "all" ? Number(statusFilter) : undefined;
+      const severityParam =
+        severityFilter !== "all" ? Number(severityFilter) : undefined;
 
       const res = await getVulnerabilities({
         status: statusParam,
         severity: severityParam,
-        search: searchTerm || undefined
+        search: searchTerm || undefined,
       });
 
       if (res.success && res.data) {
@@ -55,7 +57,9 @@ export default function VulnerabilitiesView() {
   }, [loadData]);
 
   const handleDelete = async (id: number, cve: string) => {
-    if (window.confirm(`Tem certeza que deseja excluir a vulnerabilidade ${cve}?`)) {
+    if (
+      window.confirm(`Tem certeza que deseja excluir a vulnerabilidade ${cve}?`)
+    ) {
       const res = await deleteVulnerability(id);
       if (res.success) {
         loadData();
@@ -101,15 +105,24 @@ export default function VulnerabilitiesView() {
         <div className="title-area">
           <span className="tag">CATÁLOGO DE ATIVOS E AMEAÇAS</span>
           <h1>Vulnerabilidades</h1>
-          <p>Listagem completa, filtros regulatórios e inventário de vulnerabilidades.</p>
+          <p>
+            Listagem completa, filtros regulatórios e inventário de
+            vulnerabilidades.
+          </p>
         </div>
 
         <div className="header-actions">
-          <button className="btn-secondary" onClick={() => setIsCsvModalOpen(true)}>
+          <button
+            className="btn-secondary"
+            onClick={() => setIsCsvModalOpen(true)}
+          >
             <FiFileText />
             Importar CSV
           </button>
-          <button className="btn-primary" onClick={() => setIsNewModalOpen(true)}>
+          <button
+            className="btn-primary"
+            onClick={() => setIsNewModalOpen(true)}
+          >
             <FiPlus />
             Nova Vulnerabilidade
           </button>
@@ -119,17 +132,17 @@ export default function VulnerabilitiesView() {
       <div className="filters-bar">
         <div className="search-box">
           <FiSearch color={currentTheme["muted-foreground"]} />
-          <input 
-            type="text" 
-            placeholder="Buscar por título, CVE ou descrição..." 
+          <input
+            type="text"
+            placeholder="Buscar por título, CVE ou descrição..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <div className="select-group">
-          <select 
-            value={severityFilter} 
+          <select
+            value={severityFilter}
             onChange={(e) => setSeverityFilter(e.target.value)}
           >
             <option value="all">Todas as Severidades</option>
@@ -139,8 +152,8 @@ export default function VulnerabilitiesView() {
             <option value="1">Baixa (CVSS &lt; 4.0)</option>
           </select>
 
-          <select 
-            value={statusFilter} 
+          <select
+            value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="all">Todos os Status</option>
@@ -160,89 +173,122 @@ export default function VulnerabilitiesView() {
           <div className="empty-state">
             <FiShield />
             <h3>Nenhuma vulnerabilidade encontrada</h3>
-            <p>Importe um relatório de scanner em CSV ou cadastre uma vulnerabilidade manualmente.</p>
+            <p>
+              Importe um relatório de scanner em CSV ou cadastre uma
+              vulnerabilidade manualmente.
+            </p>
           </div>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>CVE / Identificador</th>
-                <th>Título</th>
-                <th>Severidade</th>
-                <th>CVSS Score</th>
-                <th>Responsável</th>
-                <th>Prazo (SLA)</th>
-                <th>Status</th>
-                <th style={{ textAlign: "right" }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vulnerabilities.map((v) => {
-                const initials = (v.assignedUserName || "AS")
-                  .split(" ")
-                  .map((n: string) => n[0])
-                  .join("")
-                  .slice(0, 2)
-                  .toUpperCase();
+          <div className="list-content">
+            <table>
+              <thead>
+                <tr>
+                  <th>CVE / Identificador</th>
+                  <th>Título</th>
+                  <th>Severidade</th>
+                  <th>CVSS Score</th>
+                  <th>Responsável</th>
+                  <th>Prazo (SLA)</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: "right" }}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vulnerabilities.map((v) => {
+                  const initials = (v.assignedUserName || "AS")
+                    .split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase();
 
-                const isOverdue = new Date(v.dueDate).getTime() < Date.now() && v.status < 4;
+                  const isOverdue =
+                    new Date(v.dueDate).getTime() < Date.now() && v.status < 4;
 
-                return (
-                  <tr key={v.id}>
-                    <td>
-                      <strong style={{ color: currentTheme.primary }}>{v.cve}</strong>
-                    </td>
-                    <td>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                        <span style={{ fontWeight: 600 }}>{v.title}</span>
-                        <span style={{ fontSize: "12px", color: currentTheme["muted-foreground"] }}>
-                          {v.cvssVector ? v.cvssVector.substring(0, 40) + "..." : "Vetor CVSS v3.1"}
-                        </span>
-                      </div>
-                    </td>
-                    <td>{getRiskBadge(v.severity)}</td>
-                    <td>
-                      <span style={{ fontWeight: 700, fontSize: "15px" }}>{v.cveScore}</span>
-                    </td>
-                    <td>
-                      <div className="user-badge">
-                        <div className="avatar-sm">{initials}</div>
-                        <span>{v.assignedUserName || "Não atribuído"}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{ color: isOverdue ? "#ef4444" : currentTheme["muted-foreground"], fontWeight: isOverdue ? 600 : 400 }}>
-                        {new Date(v.dueDate).toLocaleDateString("pt-BR")}
-                        {isOverdue && " (Vencido)"}
-                      </span>
-                    </td>
-                    <td>{getStatusBadge(v.status)}</td>
-                    <td style={{ textAlign: "right" }}>
-                      <div className="actions-cell" style={{ justifyContent: "flex-end" }}>
-                        <button 
-                          className="delete" 
-                          onClick={() => handleDelete(v.id, v.cve)}
-                          title="Excluir Vulnerabilidade"
+                  return (
+                    <tr key={v.id}>
+                      <td>
+                        <strong style={{ color: currentTheme.primary }}>
+                          {v.cve}
+                        </strong>
+                      </td>
+                      <td>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "2px",
+                          }}
                         >
-                          <FiTrash2 /> Excluir
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                          <span style={{ fontWeight: 600 }}>{v.title}</span>
+                          <span
+                            style={{
+                              fontSize: "12px",
+                              color: currentTheme["muted-foreground"],
+                            }}
+                          >
+                            {v.cvssVector
+                              ? v.cvssVector.substring(0, 40) + "..."
+                              : "Vetor CVSS v3.1"}
+                          </span>
+                        </div>
+                      </td>
+                      <td>{getRiskBadge(v.severity)}</td>
+                      <td>
+                        <span style={{ fontWeight: 700, fontSize: "15px" }}>
+                          {v.cveScore}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="user-badge">
+                          <div className="avatar-sm">{initials}</div>
+                          <span>{v.assignedUserName || "Não atribuído"}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            color: isOverdue
+                              ? "#ef4444"
+                              : currentTheme["muted-foreground"],
+                            fontWeight: isOverdue ? 600 : 400,
+                          }}
+                        >
+                          {new Date(v.dueDate).toLocaleDateString("pt-BR")}
+                          {isOverdue && " (Vencido)"}
+                        </span>
+                      </td>
+                      <td>{getStatusBadge(v.status)}</td>
+                      <td style={{ textAlign: "right" }}>
+                        <div
+                          className="actions-cell"
+                          style={{ justifyContent: "flex-end" }}
+                        >
+                          <button
+                            className="delete"
+                            onClick={() => handleDelete(v.id, v.cve)}
+                            title="Excluir Vulnerabilidade"
+                          >
+                            <FiTrash2 /> Excluir
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
-      <NewVulnerabilityModal 
+      <NewVulnerabilityModal
         isOpen={isNewModalOpen}
         onClose={() => setIsNewModalOpen(false)}
         onCreated={loadData}
       />
 
-      <ImportCsvModal 
+      <ImportCsvModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
         onImportSuccess={loadData}
@@ -250,3 +296,4 @@ export default function VulnerabilitiesView() {
     </VulnerabilitiesStyle>
   );
 }
+

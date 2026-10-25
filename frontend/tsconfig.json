@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "src/Views/DashboardView/KanbanView/TaskModal/TaskModal.style.tsx"  ],
   "exclude": ["node_modules"]
 }

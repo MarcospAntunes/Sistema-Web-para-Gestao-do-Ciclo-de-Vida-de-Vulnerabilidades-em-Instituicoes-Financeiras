@@ -43,6 +43,9 @@ export const VulnerabilitiesStyle = styled.div<themeType>`
 
     .header-actions {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
       gap: 12px;
 
       button {
@@ -53,6 +56,7 @@ export const VulnerabilitiesStyle = styled.div<themeType>`
         border-radius: 8px;
         font-size: 14px;
         font-weight: 600;
+        width: 200px;
         cursor: pointer;
         transition: all 0.2s ease;
       }
@@ -96,7 +100,7 @@ export const VulnerabilitiesStyle = styled.div<themeType>`
       border: 1px solid ${({ theme }) => theme.border};
       padding: 8px 14px;
       border-radius: 8px;
-      min-width: 280px;
+      min-width: 220px;
       flex: 1;
 
       input {
@@ -113,6 +117,9 @@ export const VulnerabilitiesStyle = styled.div<themeType>`
 
     .select-group {
       display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
       gap: 12px;
 
       select {
@@ -122,6 +129,7 @@ export const VulnerabilitiesStyle = styled.div<themeType>`
         padding: 8px 12px;
         border-radius: 8px;
         font-size: 13px;
+        width: 220px;
         cursor: pointer;
         &:focus {
           outline: none;
@@ -178,7 +186,8 @@ export const VulnerabilitiesStyle = styled.div<themeType>`
     font-size: 12px;
     font-weight: 600;
 
-    &.crítica, &.critica {
+    &.crítica,
+    &.critica {
       background-color: ${({ theme }) => theme["critical-soft"]};
       color: ${({ theme }) => theme.critical};
     }
@@ -186,7 +195,8 @@ export const VulnerabilitiesStyle = styled.div<themeType>`
       background-color: ${({ theme }) => theme["warning-soft"]};
       color: ${({ theme }) => theme["warning-strong"]};
     }
-    &.média, &.media {
+    &.média,
+    &.media {
       background-color: ${({ theme }) => theme["primary-soft"]};
       color: ${({ theme }) => theme.primary};
     }
@@ -270,6 +280,12 @@ export const VulnerabilitiesStyle = styled.div<themeType>`
     svg {
       font-size: 40px;
       color: ${({ theme }) => theme.primary};
+    }
+  }
+
+  @media screen and (max-width: 780px) {
+    .list-content {
+      overflow-x: scroll;
     }
   }
 `;

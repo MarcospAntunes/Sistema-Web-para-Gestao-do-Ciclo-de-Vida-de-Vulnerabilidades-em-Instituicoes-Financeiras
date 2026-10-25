@@ -139,6 +139,7 @@ const Footer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap-reverse;
 
   .template-btn {
     background: transparent;
@@ -188,6 +189,11 @@ const Footer = styled.div`
         cursor: not-allowed;
       }
     }
+  }
+
+  @media screen and (max-width: 780px) {
+    justify-content: center;
+    gap: 12px;
   }
 `;
 

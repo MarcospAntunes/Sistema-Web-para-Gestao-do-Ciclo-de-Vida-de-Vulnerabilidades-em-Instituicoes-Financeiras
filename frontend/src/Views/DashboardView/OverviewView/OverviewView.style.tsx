@@ -12,6 +12,8 @@ export const OverviewStyle = styled.div<themeType>`
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
 
     .title-area {
       display: flex;
@@ -59,7 +61,7 @@ export const OverviewStyle = styled.div<themeType>`
 
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
     gap: 16px;
   }
 
@@ -115,7 +117,7 @@ export const OverviewStyle = styled.div<themeType>`
 
   .charts-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     gap: 16px;
   }
 
@@ -201,11 +203,14 @@ export const OverviewStyle = styled.div<themeType>`
     border: 1px solid ${({ theme }) => theme.border};
     border-radius: 12px;
     padding: 20px;
+    overflow: hidden;
 
     .list-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
       margin-bottom: 24px;
 
       .titles {
@@ -224,11 +229,11 @@ export const OverviewStyle = styled.div<themeType>`
       .search-box {
         display: flex;
         align-items: center;
+        gap: 8px;
         background-color: ${({ theme }) => theme.background};
         border: 1px solid ${({ theme }) => theme.border};
         border-radius: 8px;
         padding: 8px 12px;
-        gap: 8px;
         width: 250px;
 
         input {
@@ -253,16 +258,19 @@ export const OverviewStyle = styled.div<themeType>`
       th {
         text-align: left;
         font-size: 10px;
+        text-align: center;
         text-transform: uppercase;
         color: ${({ theme }) => theme["muted-foreground"]};
         padding-bottom: 16px;
+        padding-right: 10px;
+        padding-left: 10px;
         border-bottom: 1px solid ${({ theme }) => theme.border};
         font-weight: 600;
         letter-spacing: 0.5px;
       }
 
       td {
-        padding: 16px 0;
+        padding: 16px 10px;
         border-bottom: 1px solid ${({ theme }) => theme.border};
         font-size: 13px;
         color: ${({ theme }) => theme.foreground};
@@ -310,6 +318,21 @@ export const OverviewStyle = styled.div<themeType>`
       justify-content: center;
       font-size: 10px;
       font-weight: 700;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .charts-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .search-box {
+      width: 100% !important;
+    }
+
+    .list-content {
+      overflow-x: scroll;
     }
   }
 `;

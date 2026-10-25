@@ -4,32 +4,44 @@ import { themeType } from "@/themes/theme.type";
 export const SidebarStyle = styled.aside<themeType>`
   width: 260px;
   height: 100%;
+  min-height: 0;
   background-color: ${({ theme }) => theme.sidebar};
   border-right: 1px solid ${({ theme }) => theme["sidebar-border"]};
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  overflow: hidden;
+  transition:
+    width 0.25s ease,
+    transform 0.25s ease;
+  z-index: 100;
 
   .logo-container {
     height: 72px;
+    min-height: 72px;
     display: flex;
     align-items: center;
     padding: 0 24px;
     border-bottom: 1px solid ${({ theme }) => theme["sidebar-border"]};
+    overflow: hidden;
 
     > div {
       transform: scale(0.85);
       transform-origin: left center;
+      flex-shrink: 0;
     }
   }
 
   .nav-sections {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 24px 16px;
     display: flex;
     flex-direction: column;
     gap: 32px;
+    scrollbar-width: thin;
   }
 
   .nav-section {
@@ -45,6 +57,7 @@ export const SidebarStyle = styled.aside<themeType>`
       letter-spacing: 0.5px;
       padding-left: 12px;
       margin-bottom: 4px;
+      white-space: nowrap;
     }
   }
 
@@ -52,22 +65,42 @@ export const SidebarStyle = styled.aside<themeType>`
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     padding: 10px 12px;
+    border: none;
     border-radius: 8px;
     color: ${({ theme }) => theme["muted-foreground"]};
+    background: transparent;
     text-decoration: none;
-    transition: all 0.2s ease;
+    font: inherit;
+    text-align: left;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
     cursor: pointer;
 
     .item-content {
       display: flex;
       align-items: center;
       gap: 12px;
+      min-width: 0;
       font-size: 14px;
       font-weight: 500;
 
       svg {
-        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+        flex-shrink: 0;
+      }
+
+      span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
     }
 
@@ -76,13 +109,18 @@ export const SidebarStyle = styled.aside<themeType>`
       color: ${({ theme }) => theme["sidebar-accent-foreground"]};
     }
 
+    &:focus-visible {
+      outline: 2px solid ${({ theme }) => theme.primary};
+      outline-offset: -2px;
+    }
+
     &.active {
       background-color: ${({ theme }) => theme["sidebar-accent"]};
       color: ${({ theme }) => theme["sidebar-accent-foreground"]};
       position: relative;
-      
+
       &::before {
-        content: '';
+        content: "";
         position: absolute;
         left: -16px;
         top: 50%;
@@ -96,6 +134,7 @@ export const SidebarStyle = styled.aside<themeType>`
   }
 
   .badge {
+    flex-shrink: 0;
     background-color: ${({ theme }) => theme["critical-soft"]};
     color: ${({ theme }) => theme.critical};
     font-size: 11px;
@@ -105,6 +144,7 @@ export const SidebarStyle = styled.aside<themeType>`
   }
 
   .scan-status {
+    flex-shrink: 0;
     padding: 24px 20px;
     border-top: 1px solid ${({ theme }) => theme["sidebar-border"]};
 
@@ -120,6 +160,7 @@ export const SidebarStyle = styled.aside<themeType>`
       .indicator {
         width: 8px;
         height: 8px;
+        min-width: 8px;
         border-radius: 50%;
         background-color: ${({ theme }) => theme.success};
       }
@@ -141,7 +182,61 @@ export const SidebarStyle = styled.aside<themeType>`
 
     .status-text {
       font-size: 11px;
+      line-height: 1.5;
       color: ${({ theme }) => theme["muted-foreground"]};
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    width: 220px;
+
+    .logo-container {
+      padding: 0 16px;
+    }
+
+    .nav-sections {
+      padding: 20px 12px;
+      gap: 24px;
+    }
+
+    .scan-status {
+      padding: 20px 14px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    width: min(280px, 85vw);
+    height: 100vh;
+    height: 100dvh;
+
+    z-index: 100;
+
+    transform: translateX(-100%);
+    opacity: 0;
+    pointer-events: none;
+
+    transition:
+      transform 0.4s ease-in-out,
+      opacity 0.3s ease-in-out;
+
+    &.open {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    @media (max-width: 768px) {
+      &,
+      &.open {
+        transition: none;
+      }
     }
   }
 `;

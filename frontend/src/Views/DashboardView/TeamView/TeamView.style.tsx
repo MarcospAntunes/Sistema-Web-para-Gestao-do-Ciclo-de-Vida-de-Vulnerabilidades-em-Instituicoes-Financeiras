@@ -12,6 +12,8 @@ export const TeamStyle = styled.div<themeType>`
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
 
     .title-area {
       display: flex;
@@ -60,7 +62,7 @@ export const TeamStyle = styled.div<themeType>`
 
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
   }
 
@@ -104,7 +106,7 @@ export const TeamStyle = styled.div<themeType>`
 
   .team-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
 
@@ -120,7 +122,8 @@ export const TeamStyle = styled.div<themeType>`
     .member-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: flex-end;
+      flex-wrap: wrap-reverse;
 
       .member-info {
         display: flex;
@@ -172,8 +175,9 @@ export const TeamStyle = styled.div<themeType>`
         font-weight: 700;
         padding: 4px 8px;
         border-radius: 4px;
+        text-align: start;
         text-transform: uppercase;
-        
+
         &.ativa {
           color: ${({ theme }) => theme.success};
           background-color: ${({ theme }) => theme["success-soft"]};
@@ -224,7 +228,7 @@ export const TeamStyle = styled.div<themeType>`
         span {
           color: ${({ theme }) => theme["muted-foreground"]};
         }
-        
+
         strong {
           color: ${({ theme }) => theme.foreground};
         }
@@ -241,6 +245,26 @@ export const TeamStyle = styled.div<themeType>`
           border-radius: 3px;
         }
       }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .team-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 `;
@@ -271,8 +295,17 @@ export const ModalBox = styled.div`
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    h3 { margin: 0; font-size: 1.15rem; }
-    button { background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 1.25rem; }
+    h3 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+    button {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 1.25rem;
+    }
   }
 
   form {
@@ -288,14 +321,18 @@ export const ModalBox = styled.div`
       gap: 6px;
     }
 
-    input, select {
+    input,
+    select {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 6px;
       padding: 10px 12px;
       color: #fff;
       font-size: 0.9rem;
-      &:focus { outline: none; border-color: #3b82f6; }
+      &:focus {
+        outline: none;
+        border-color: #3b82f6;
+      }
     }
 
     .modal-actions {
@@ -320,7 +357,9 @@ export const ModalBox = styled.div`
         background: #2563eb;
         border: none;
         color: #fff;
-        &:hover { background: #1d4ed8; }
+        &:hover {
+          background: #1d4ed8;
+        }
       }
     }
   }

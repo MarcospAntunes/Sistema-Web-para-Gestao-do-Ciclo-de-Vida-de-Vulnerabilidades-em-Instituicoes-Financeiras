@@ -33,6 +33,7 @@ export const ModalOverlay = styled.div<themeType>`
   z-index: 1000;
   padding: 20px;
   animation: ${fadeIn} 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  
 `;
 
 export const ModalContainer = styled.div<themeType>`
@@ -44,11 +45,16 @@ export const ModalContainer = styled.div<themeType>`
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.55),
+  box-shadow:
+    0 24px 60px -12px rgba(0, 0, 0, 0.55),
     0 0 1px 1px rgba(255, 255, 255, 0.05);
   overflow: hidden;
   animation: ${slideUp} 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+
+  @media screen and (max-width: 965px) {
+    overflow-y: scroll;
+  }
 `;
 
 export const ModalHeader = styled.div<themeType>`
@@ -212,15 +218,11 @@ export const ModalHeader = styled.div<themeType>`
 
 export const MetricsStrip = styled.div<themeType>`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
   padding: 16px 28px;
   background-color: ${({ theme }) => theme.secondary}60;
   border-bottom: 1px solid ${({ theme }) => theme.border};
-
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
 
   .metric-card {
     background-color: ${({ theme }) => theme.card};
@@ -288,6 +290,7 @@ export const MetricsStrip = styled.div<themeType>`
 
 export const TabsNav = styled.div<themeType>`
   display: flex;
+  flex-wrap: wrap;
   padding: 0 28px;
   border-bottom: 1px solid ${({ theme }) => theme.border};
   background-color: ${({ theme }) => theme.card};
@@ -328,13 +331,12 @@ export const TabsNav = styled.div<themeType>`
 
 export const ModalBody = styled.div<themeType>`
   padding: 24px 28px;
-  overflow-y: auto;
+  
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 24px;
 
-  /* Custom scrollbar */
   &::-webkit-scrollbar {
     width: 6px;
   }
@@ -655,6 +657,7 @@ export const ModalFooter = styled.div<themeType>`
   .footer-status-select {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 10px;
 
     span {
@@ -697,6 +700,8 @@ export const ModalFooter = styled.div<themeType>`
   .footer-actions {
     display: flex;
     align-items: center;
+    flex: 1;
+    justify-content: center;
     gap: 10px;
 
     .btn-close {
