@@ -5,18 +5,32 @@ import { useTheme } from "@/hooks";
 import { resolveTheme } from "@/themes";
 import { KanbanStyle } from "./KanbanView.style";
 import { initialTasks, initialColumns } from "./mockData";
-import { KanbanTask, TaskStatus } from "./types";
-import { mapBackendToKanban, statusToStatusEnum, BackendVulnerability } from "./mapper";
-import { getVulnerabilities, updateVulnerabilityStatus, addVulnerabilityHistory } from "@/api/vulnerabilities";
+import { KanbanTask, TaskStatus, TaskHistoryItem } from "./types";
+import {
+  mapBackendToKanban,
+  statusToStatusEnum,
+  BackendVulnerability,
+} from "./mapper";
+import {
+  getVulnerabilities,
+  updateVulnerabilityStatus,
+  addVulnerabilityHistory,
+} from "@/api/vulnerabilities";
 import TaskModal from "./TaskModal";
-import { FiSearch, FiServer, FiArrowDown } from "react-icons/fi";
+import {
+  FiSearch,
+  FiServer,
+  FiArrowDown,
+  FiAlertTriangle,
+  FiX,
+} from "react-icons/fi";
 
 const statusLabels: Record<TaskStatus, string> = {
   backlog: "Backlog",
   analysis: "Em análise",
   execution: "Em execução",
   validation: "Validação",
-  resolved: "Resolvido"
+  resolved: "Resolvido",
 };
 
 export default function KanbanView() {
@@ -27,12 +41,16 @@ export default function KanbanView() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-  const [dragOverColumnId, setDragOverColumnId] = useState<TaskStatus | null>(null);
+  const [dragOverColumnId, setDragOverColumnId] = useState<TaskStatus | null>(
+    null,
+  );
   const [dragOverCardId, setDragOverCardId] = useState<string | null>(null);
   const justDroppedRef = useRef(false);
   const dropTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isDraggingRef = useRef(false);
+  const errorTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -41,7 +59,9 @@ export default function KanbanView() {
       try {
         const res = await getVulnerabilities();
         if (res.success && res.data && res.data.length > 0 && isMounted) {
-          const mapped = (res.data as BackendVulnerability[]).map(mapBackendToKanban);
+          const mapped = (res.data as BackendVulnerability[]).map(
+            mapBackendToKanban,
+          );
           setTasks(mapped);
         }
       } catch (err) {
@@ -56,8 +76,44 @@ export default function KanbanView() {
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    };
+  }, []);
+
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
   const currentDraggedTask = tasks.find((t) => t.id === draggedTaskId) || null;
+
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    errorTimerRef.current = setTimeout(() => setErrorMessage(null), 6000);
+  };
+
+  const rollbackStatus = (
+    taskId: string,
+    status: TaskStatus,
+    history: TaskHistoryItem[],
+  ) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((t) =>
+        t.id === taskId
+          ? { ...t, status, statusLabel: statusLabels[status], history }
+          : t,
+      ),
+    );
+  };
+
+  const removeHistoryItem = (taskId: string, historyItemId: string) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((t) =>
+        t.id === taskId
+          ? { ...t, history: t.history.filter((h) => h.id !== historyItemId) }
+          : t,
+      ),
+    );
+  };
 
   const handleCardClick = (task: KanbanTask) => {
     if (justDroppedRef.current) return;
@@ -72,17 +128,42 @@ export default function KanbanView() {
     taskId: string,
     newStatus: TaskStatus,
     targetTaskId?: string,
-    viaDrag = false
+    viaDrag = false,
   ) => {
+    const currentTask = tasks.find((t) => t.id === taskId);
+    if (!currentTask) return;
+
+    const previousStatus = currentTask.status;
+    const previousHistory = currentTask.history;
+    const statusChanged = previousStatus !== newStatus;
+
     const now = new Date();
-    const formattedDate = `${now.toLocaleDateString("pt-BR")} ${now.toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit"
-    })}`;
+    const formattedDate = `${now.toLocaleDateString("pt-BR")} ${now.toLocaleTimeString(
+      "pt-BR",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    )}`;
 
     const numId = Number(taskId);
-    if (!isNaN(numId) && numId > 0) {
-      updateVulnerabilityStatus(numId, statusToStatusEnum(newStatus)).catch(console.error);
+    if (statusChanged && !isNaN(numId) && numId > 0) {
+      updateVulnerabilityStatus(numId, statusToStatusEnum(newStatus))
+        .then((res) => {
+          if (!res.success) {
+            rollbackStatus(taskId, previousStatus, previousHistory);
+            showError(
+              res.error ||
+                "Não foi possível atualizar o status. A alteração foi desfeita.",
+            );
+          }
+        })
+        .catch(() => {
+          rollbackStatus(taskId, previousStatus, previousHistory);
+          showError(
+            "Falha de conexão ao atualizar o status. A alteração foi desfeita.",
+          );
+        });
     }
 
     setTasks((prevTasks) => {
@@ -104,25 +185,26 @@ export default function KanbanView() {
                 author: "Analista SecOps",
                 authorInitials: "AS",
                 action: viaDrag
-                  ? `Card arrastado no quadro de '${current.statusLabel}' para '${statusLabels[newStatus]}'.`
-                  : `Status alterado de '${current.statusLabel}' para '${statusLabels[newStatus]}'.`
+                  ? `Card arrastado no quadro de '${statusLabels[current.status]}' para '${statusLabels[newStatus]}'.`
+                  : `Status alterado de '${statusLabels[current.status]}' para '${statusLabels[newStatus]}'.`,
               },
-              ...current.history
-            ]
+              ...current.history,
+            ],
           }
         : current;
 
       const listWithoutDragged = prevTasks.filter((t) => t.id !== taskId);
 
       if (targetTaskId && targetTaskId !== taskId) {
-        const targetIndex = listWithoutDragged.findIndex((t) => t.id === targetTaskId);
+        const targetIndex = listWithoutDragged.findIndex(
+          (t) => t.id === targetTaskId,
+        );
         if (targetIndex !== -1) {
           const newList = [...listWithoutDragged];
           newList.splice(targetIndex, 0, updatedTask);
           return newList;
         }
       }
-
       return [...listWithoutDragged, updatedTask];
     });
   };
@@ -133,35 +215,58 @@ export default function KanbanView() {
 
   const handleAddComment = (taskId: string, commentText: string) => {
     const now = new Date();
-    const formattedDate = `${now.toLocaleDateString("pt-BR")} ${now.toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit"
-    })}`;
+    const formattedDate = `${now.toLocaleDateString("pt-BR")} ${now.toLocaleTimeString(
+      "pt-BR",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    )}`;
+
+    const historyItemId = `hist-${Date.now()}`;
 
     const numId = Number(taskId);
     if (!isNaN(numId) && numId > 0) {
-      addVulnerabilityHistory(numId, { action: "Comentário adicionado", comment: commentText }).catch(console.error);
+      addVulnerabilityHistory(numId, {
+        action: "Comentário adicionado",
+        comment: commentText,
+      })
+        .then((res) => {
+          if (!res.success) {
+            removeHistoryItem(taskId, historyItemId);
+            showError(
+              res.error ||
+                "Não foi possível salvar a nota. Ela foi removida da timeline.",
+            );
+          }
+        })
+        .catch(() => {
+          removeHistoryItem(taskId, historyItemId);
+          showError(
+            "Falha de conexão ao salvar a nota. Ela foi removida da timeline.",
+          );
+        });
     }
 
     setTasks((prevTasks) =>
       prevTasks.map((t) => {
         if (t.id === taskId) {
           const newHistoryItem = {
-            id: `hist-${Date.now()}`,
+            id: historyItemId,
             timestamp: formattedDate,
             author: "Analista SecOps",
             authorInitials: "AS",
             action: "Adicionou um comentário",
-            comment: commentText
+            comment: commentText,
           };
 
           return {
             ...t,
-            history: [newHistoryItem, ...t.history]
+            history: [newHistoryItem, ...t.history],
           };
         }
         return t;
-      })
+      }),
     );
   };
 
@@ -229,7 +334,7 @@ export default function KanbanView() {
   const handleDropOnCard = (
     e: React.DragEvent,
     columnId: TaskStatus,
-    targetCardId: string
+    targetCardId: string,
   ) => {
     e.preventDefault();
     e.stopPropagation();
@@ -257,17 +362,63 @@ export default function KanbanView() {
 
   const columns = initialColumns.map((col) => ({
     ...col,
-    cards: filteredTasks.filter((t) => t.status === col.id)
+    cards: filteredTasks.filter((t) => t.status === col.id),
   }));
 
   return (
     <KanbanStyle theme={currentTheme}>
+      {errorMessage && (
+        <div
+          role="alert"
+          style={{
+            position: "fixed",
+            top: 20,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1100,
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            maxWidth: "min(560px, calc(100vw - 32px))",
+            padding: "12px 16px",
+            borderRadius: 10,
+            backgroundColor: currentTheme["critical-soft"],
+            color: currentTheme.critical,
+            border: `1px solid ${currentTheme.critical}`,
+            fontSize: 13,
+            fontWeight: 600,
+            boxShadow: "0 12px 32px -8px rgba(0, 0, 0, 0.5)",
+          }}
+        >
+          <FiAlertTriangle size={16} style={{ flexShrink: 0 }} />
+          <span>{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            aria-label="Fechar aviso"
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "inherit",
+              cursor: "pointer",
+              display: "flex",
+              padding: 2,
+            }}
+          >
+            <FiX size={14} />
+          </button>
+        </div>
+      )}
+
       <div className="header">
         <div className="header-info">
-          <span className="subtitle">FLUXO DE TRATAMENTO & REMEDIAÇÃO • DRAG & DROP</span>
+          <span className="subtitle">
+            FLUXO DE TRATAMENTO & REMEDIAÇÃO • DRAG & DROP
+          </span>
           <h1>Kanban de Vulnerabilidades</h1>
           <p>
-            Arraste os cards entre as colunas para atualizar o status do ciclo de vida, ou clique no card para ver as informações completas.
+            Arraste os cards entre as colunas para atualizar o status do ciclo
+            de vida, ou clique no card para ver as informações completas.
           </p>
         </div>
 
@@ -289,9 +440,12 @@ export default function KanbanView() {
 
       <div className="kanban-board">
         {columns.map((column) => {
-          const isColumnHovered = dragOverColumnId === column.id && Boolean(draggedTaskId);
+          const isColumnHovered =
+            dragOverColumnId === column.id && Boolean(draggedTaskId);
           const isCrossColumn =
-            isColumnHovered && currentDraggedTask && currentDraggedTask.status !== column.id;
+            isColumnHovered &&
+            currentDraggedTask &&
+            currentDraggedTask.status !== column.id;
 
           return (
             <div
@@ -303,7 +457,10 @@ export default function KanbanView() {
             >
               <div className="column-header">
                 <div className="column-title">
-                  <div className="dot" style={{ backgroundColor: column.color }} />
+                  <div
+                    className="dot"
+                    style={{ backgroundColor: column.color }}
+                  />
                   {column.title}
                 </div>
                 <div className="column-count">{column.cards.length}</div>
@@ -317,11 +474,14 @@ export default function KanbanView() {
                 )}
 
                 {column.cards.length === 0 && !isCrossColumn ? (
-                  <div className="empty-column">Nenhuma vulnerabilidade neste status</div>
+                  <div className="empty-column">
+                    Nenhuma vulnerabilidade neste status
+                  </div>
                 ) : (
                   column.cards.map((card) => {
                     const isDragging = draggedTaskId === card.id;
-                    const isTargetCard = dragOverCardId === card.id && !isDragging;
+                    const isTargetCard =
+                      dragOverCardId === card.id && !isDragging;
 
                     return (
                       <div
@@ -341,9 +501,13 @@ export default function KanbanView() {
                         <div className="card-top">
                           <div className="card-id-group">
                             <span className="card-id">{card.id}</span>
-                            {card.cve && <span className="card-cve">{card.cve}</span>}
+                            {card.cve && (
+                              <span className="card-cve">{card.cve}</span>
+                            )}
                           </div>
-                          <span className={`badge-risk ${card.risk.toLowerCase()}`}>
+                          <span
+                            className={`badge-risk ${card.risk.toLowerCase()}`}
+                          >
                             {card.risk}
                           </span>
                         </div>
@@ -368,7 +532,9 @@ export default function KanbanView() {
 
                         <div className="card-footer">
                           <div className="assignee">
-                            <div className="avatar-sm">{card.assignee.initials}</div>
+                            <div className="avatar-sm">
+                              {card.assignee.initials}
+                            </div>
                             <span className="name">{card.assignee.name}</span>
                           </div>
                           <div className="cvss">
@@ -385,7 +551,6 @@ export default function KanbanView() {
           );
         })}
       </div>
-
       <TaskModal
         task={selectedTask}
         isOpen={Boolean(selectedTask)}

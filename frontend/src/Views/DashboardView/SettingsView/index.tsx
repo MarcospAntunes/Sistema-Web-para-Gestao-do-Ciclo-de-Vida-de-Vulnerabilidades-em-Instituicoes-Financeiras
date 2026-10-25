@@ -15,6 +15,12 @@ import {
   FiInfo,
 } from "react-icons/fi";
 
+const accessProfileLabels: Record<number, string> = {
+  1: "Administrador (Nível 3)",
+  2: "Analista de Segurança (Nível 2)",
+  3: "Visualizador (Nível 1)",
+};
+
 export default function SettingsView() {
   const { theme, setTheme } = useTheme();
   const currentTheme = resolveTheme(theme);
@@ -68,7 +74,7 @@ export default function SettingsView() {
                 <label>Nome Completo</label>
                 <input
                   type="text"
-                  defaultValue={user?.name || "Administrador SecOps"}
+                  value={user?.name ?? "Carregando..."}
                   disabled
                 />
               </div>
@@ -77,7 +83,7 @@ export default function SettingsView() {
                 <label>E-mail Corporativo</label>
                 <input
                   type="email"
-                  defaultValue={user?.email || "admin@vulntracker.com"}
+                  value={user?.email ?? "Carregando..."}
                   disabled
                 />
               </div>
@@ -89,9 +95,9 @@ export default function SettingsView() {
                 <input
                   type="text"
                   value={
-                    user?.roleId === 1
-                      ? "Administrador (Nível 3)"
-                      : "Analista de Segurança (Nível 2)"
+                    user
+                      ? (accessProfileLabels[user.roleId] ?? "Sem perfil")
+                      : "Carregando..."
                   }
                   disabled
                 />

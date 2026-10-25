@@ -48,7 +48,7 @@ export const ModalContainer = styled.div<themeType>`
   box-shadow:
     0 24px 60px -12px rgba(0, 0, 0, 0.55),
     0 0 1px 1px rgba(255, 255, 255, 0.05);
-  overflow: hidden;
+  overflow-y: scroll;
   animation: ${slideUp} 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 

@@ -5,7 +5,12 @@ export function useAuthForm() {
   const [form, setForm] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    name?: string;
+    general?: string;
+  }>({});
   const [loading, setLoading] = useState(false);
   const [registerName, setRegisterName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
@@ -21,12 +26,21 @@ export function useAuthForm() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
+  // Regra igual à do backend (backend/src/models/User.cs):
+  // 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial.
   const isValidPassword = (password: string) => {
     const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const isValidLength = password.length >= 8;
-    return hasUpperCase && hasNumber && hasSpecialChar && isValidLength;
+    const hasSpecialChar = /[^\da-zA-Z]/.test(password);
+    const isValidLength = password.length >= 8 && password.length <= 64;
+    return (
+      hasUpperCase &&
+      hasLowerCase &&
+      hasNumber &&
+      hasSpecialChar &&
+      isValidLength
+    );
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -95,7 +109,8 @@ export function useAuthForm() {
       newErrors.password = "A senha é obrigatória.";
       hasError = true;
     } else if (!isValidPassword(registerPassword)) {
-      newErrors.password = "A senha deve ter pelo menos 8 dígitos, pelo menos uma letra maiúscula, pelo menos um número e pelo menos um caractere especial.";
+      newErrors.password =
+        "A senha deve ter de 8 a 64 caracteres, com letra maiúscula, minúscula, número e caractere especial.";
       hasError = true;
     }
 
@@ -112,7 +127,11 @@ export function useAuthForm() {
     setLoading(true);
 
     try {
-      const result = await register(registerName, registerEmail, registerPassword);
+      const result = await register(
+        registerName,
+        registerEmail,
+        registerPassword,
+      );
 
       if (result?.success) {
         const loginResult = await login(registerEmail, registerPassword);

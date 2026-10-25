@@ -9,8 +9,9 @@ namespace Security
     public static IActionResult? CanAccessUser(ClaimsPrincipal user, int id)
     {
       var loggedId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-      if(loggedId is null) return CustomResults.Unauthorized("Autenticação inválida");
-      if(int.Parse(loggedId) != id && VerifyRole.IsHighLevel(user)) return CustomResults.Forbidden("Acesso negado");
+      if (!int.TryParse(loggedId, out int loggedUserId)) return CustomResults.Unauthorized("Autenticação inválida");
+
+      if (loggedUserId != id && !VerifyRole.IsHighLevel(user)) return CustomResults.Forbidden("Acesso negado");
 
       return null;
     }
@@ -18,7 +19,7 @@ namespace Security
     public static IActionResult? IsLogged(ClaimsPrincipal user)
     {
       var loggedId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-      if(loggedId is null) return CustomResults.Unauthorized("Autenticação inválida");
+      if (loggedId is null) return CustomResults.Unauthorized("Autenticação inválida");
 
       return null;
     }

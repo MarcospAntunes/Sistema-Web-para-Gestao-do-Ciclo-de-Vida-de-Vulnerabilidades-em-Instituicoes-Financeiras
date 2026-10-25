@@ -12,6 +12,10 @@ namespace Services
 {
   public class UserService : IUserService
   {
+    private const string InvalidEmailMessage = "O e-mail informado é inválido.";
+    private const string InvalidPasswordMessage =
+      "A senha deve ter de 8 a 64 caracteres, com letra maiúscula, minúscula, número e caractere especial.";
+
     private readonly VulnTrackerDbContext _context;
 
     public UserService(VulnTrackerDbContext context)
@@ -103,14 +107,24 @@ namespace Services
         throw new Exception("This email address is already registered.");
       }
 
+      // Perfil padrão do cadastro: Analista (existe no seed do init.sql)
       User newUser = new User
       {
         Name = dto.Name,
-        RoleId = 0,
+        RoleId = RoleIds.Analyst,
       };
 
-      newUser.SetEmail(dto.Email);
-      newUser.SetPassword(dto.Password);
+      // SetEmail/SetPassword devolvem false quando o valor é inválido (sem lançar exceção).
+      // Se o retorno for ignorado, o usuário seria salvo com PasswordHash nulo.
+      if (!newUser.SetEmail(dto.Email))
+      {
+        throw new Exception(InvalidEmailMessage);
+      }
+
+      if (!newUser.SetPassword(dto.Password))
+      {
+        throw new Exception(InvalidPasswordMessage);
+      }
 
       _context.Users.Add(newUser);
       await _context.SaveChangesAsync();
@@ -130,8 +144,16 @@ namespace Services
       }
 
       userEntity.Name = dto.Name;
-      userEntity.SetEmail(dto.Email);
-      userEntity.SetPassword(dto.Password);
+
+      if (!userEntity.SetEmail(dto.Email))
+      {
+        throw new Exception(InvalidEmailMessage);
+      }
+
+      if (!userEntity.SetPassword(dto.Password))
+      {
+        throw new Exception(InvalidPasswordMessage);
+      }
 
       await _context.SaveChangesAsync();
 
@@ -158,18 +180,25 @@ namespace Services
       if (user == null)
         throw new UnauthorizedAccessException("Usuário não fornecido.");
 
+      // 1. Tenta buscar pelo padrão NameIdentifier
       string? claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
 
+      // 2. Se falhar, tenta buscar pela string pura "id" ou pelo Name (fallback de segurança)
       if (string.IsNullOrEmpty(claimValue))
       {
         claimValue = user.FindFirstValue("id") ?? user.FindFirstValue("sub") ?? user.FindFirstValue(ClaimTypes.Name);
       }
 
+      // 3. Validação robusta antes de tentar converter para Inteiro
       if (string.IsNullOrEmpty(claimValue) || !int.TryParse(claimValue, out int userId))
       {
+        // Se quiser debugar, descomente a linha abaixo para listar no console do C# todas as claims que vieram no cookie:
+        // foreach (var c in user.Claims) { Console.WriteLine($"Claim encontrada: {c.Type} = {c.Value}"); }
+
         throw new UnauthorizedAccessException("ID do usuário não pôde ser encontrado nas claims do cookie.");
       }
 
+      // 4. Busca o usuário de forma segura
       User? userLogged = await _context.Users
           .AsNoTracking()
           .FirstOrDefaultAsync(u => u.Id == userId);

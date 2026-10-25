@@ -8,6 +8,10 @@ namespace Models
 
   public class User
   {
+    // Regra de senha (mantenha igual à de frontend/src/hooks/useAuthForm.ts):
+    // 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial.
+    private const string PasswordPattern = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,64}$";
+
     public User()
     {
       Name = null!;
@@ -27,9 +31,11 @@ namespace Models
     [ForeignKey(nameof(Role))] public int RoleId { get; set; }
     public virtual Role Role { get; private set; } = null!;
 
+    // Retorna false (sem alterar o hash) se a senha não atender à regra.
+    // Quem chama DEVE checar o retorno.
     public bool SetPassword(string Password)
     {
-      if (!Regex.IsMatch(Password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,15}$"))
+      if (!Regex.IsMatch(Password, PasswordPattern))
         return false;
 
       PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password, workFactor: 12);
@@ -40,7 +46,6 @@ namespace Models
     {
       return BCrypt.Net.BCrypt.Verify(Password, PasswordHash);
     }
-
     public bool SetEmail(string Email)
     {
       try
