@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "@/hooks";
 import { resolveTheme } from "@/themes";
 import { VulnerabilitiesStyle } from "./VulnerabilitiesView.style";
@@ -13,9 +13,6 @@ import {
   FiFileText, 
   FiTrash2, 
   FiShield, 
-  FiCheckCircle, 
-  FiAlertTriangle,
-  FiFilter
 } from "react-icons/fi";
 
 export default function VulnerabilitiesView() {

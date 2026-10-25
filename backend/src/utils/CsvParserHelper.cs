@@ -37,7 +37,7 @@ namespace Utils
           if (insideQuotes && nextCharCode == '"')
           {
             currentCell.Append('"');
-            reader.Read(); // consome a segunda aspa
+            reader.Read();
           }
           else
           {
@@ -53,12 +53,11 @@ namespace Utils
         {
           if (c == '\r' && reader.Peek() == '\n')
           {
-            reader.Read(); // consome '\n' após '\r'
+            reader.Read();
           }
           currentRow.Add(currentCell.ToString().Trim());
           currentCell.Clear();
 
-          // Só adiciona se não for linha totalmente vazia
           if (currentRow.Any(cell => !string.IsNullOrWhiteSpace(cell)))
           {
             rows.Add(new List<string>(currentRow));

@@ -115,7 +115,6 @@ export default function TaskModal({
       }}
     >
       <ModalContainer theme={currentTheme}>
-        {/* Top Header */}
         <ModalHeader theme={currentTheme}>
           <div className="top-meta">
             <div className="meta-left">
@@ -186,7 +185,6 @@ export default function TaskModal({
           </div>
         </ModalHeader>
 
-        {/* Metrics Strip */}
         <MetricsStrip theme={currentTheme}>
           <div className="metric-card">
             <div className="label">
@@ -227,7 +225,6 @@ export default function TaskModal({
           </div>
         </MetricsStrip>
 
-        {/* Tabs Bar */}
         <TabsNav theme={currentTheme}>
           <button
             className={`tab-btn ${activeTab === "geral" ? "active" : ""}`}
@@ -260,7 +257,6 @@ export default function TaskModal({
           </button>
         </TabsNav>
 
-        {/* Modal Scrollable Body */}
         <ModalBody theme={currentTheme}>
           {activeTab === "geral" && (
             <>
@@ -434,7 +430,6 @@ export default function TaskModal({
                 </div>
               </div>
 
-              {/* Add Comment / Note */}
               <div className="comment-input-area">
                 <div style={{ fontSize: "12px", fontWeight: 700, color: currentTheme.foreground }}>
                   Registrar Nota de Acompanhamento
@@ -459,7 +454,6 @@ export default function TaskModal({
           )}
         </ModalBody>
 
-        {/* Modal Sticky Footer */}
         <ModalFooter theme={currentTheme}>
           <div className="footer-status-select">
             <span>Mover no Kanban:</span>

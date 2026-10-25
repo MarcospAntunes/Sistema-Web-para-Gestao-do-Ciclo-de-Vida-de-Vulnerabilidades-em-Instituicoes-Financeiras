@@ -27,8 +27,6 @@ export default function KanbanView() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  // Drag and drop states
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverColumnId, setDragOverColumnId] = useState<TaskStatus | null>(null);
   const [dragOverCardId, setDragOverCardId] = useState<string | null>(null);
@@ -36,7 +34,6 @@ export default function KanbanView() {
   const dropTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isDraggingRef = useRef(false);
 
-  // Carrega vulnerabilidades reais do backend
   useEffect(() => {
     let isMounted = true;
     async function loadTasks() {
@@ -63,7 +60,6 @@ export default function KanbanView() {
   const currentDraggedTask = tasks.find((t) => t.id === draggedTaskId) || null;
 
   const handleCardClick = (task: KanbanTask) => {
-    // If a drag/drop operation finished in the last 150ms, ignore trailing mouseup click
     if (justDroppedRef.current) return;
     setSelectedTaskId(task.id);
   };
@@ -127,7 +123,6 @@ export default function KanbanView() {
         }
       }
 
-      // If moving to a new column without target card, append at end of that status group
       return [...listWithoutDragged, updatedTask];
     });
   };
@@ -170,7 +165,6 @@ export default function KanbanView() {
     );
   };
 
-  // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
     isDraggingRef.current = true;
     setDraggedTaskId(cardId);
@@ -182,7 +176,6 @@ export default function KanbanView() {
     setDraggedTaskId(null);
     setDragOverColumnId(null);
     setDragOverCardId(null);
-    // Brief timeout so click event on card is suppressed
     setTimeout(() => {
       isDraggingRef.current = false;
     }, 100);
@@ -197,7 +190,6 @@ export default function KanbanView() {
   };
 
   const handleDragLeaveColumn = (e: React.DragEvent, columnId: TaskStatus) => {
-    // Only reset if leaving the column element itself
     const relatedTarget = e.relatedTarget as HTMLElement | null;
     const currentTarget = e.currentTarget as HTMLElement;
     if (!currentTarget.contains(relatedTarget)) {
@@ -250,7 +242,6 @@ export default function KanbanView() {
     setDragOverCardId(null);
   };
 
-  // Filter tasks based on search input
   const filteredTasks = tasks.filter((task) => {
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase();
@@ -395,7 +386,6 @@ export default function KanbanView() {
         })}
       </div>
 
-      {/* Task Full Details Modal */}
       <TaskModal
         task={selectedTask}
         isOpen={Boolean(selectedTask)}

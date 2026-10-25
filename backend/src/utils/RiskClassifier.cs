@@ -4,9 +4,7 @@ namespace Utils
 {
   public static class RiskClassifier
   {
-    /// <summary>
-    /// Classifica a severidade de acordo com a pontuação CVSS v3.x (FIRST.org)
-    /// </summary>
+
     public static severityEnum ClassifySeverity(decimal cvssScore)
     {
       if (cvssScore >= 9.0m) return severityEnum.critical;
@@ -16,9 +14,6 @@ namespace Utils
       return severityEnum.none;
     }
 
-    /// <summary>
-    /// Define a prioridade com base na severidade e CVSS
-    /// </summary>
     public static priorityEnum ClassifyPriority(severityEnum severity)
     {
       return severity switch
@@ -30,13 +25,6 @@ namespace Utils
       };
     }
 
-    /// <summary>
-    /// Calcula a data limite de remediação (SLA) segundo políticas de segurança para instituições financeiras:
-    /// - Crítica: 7 dias
-    /// - Alta: 15 dias
-    /// - Média: 30 dias
-    /// - Baixa: 60 dias
-    /// </summary>
     public static DateTime CalculateDueDate(DateTime discoveredAt, severityEnum severity)
     {
       int days = severity switch
@@ -50,9 +38,6 @@ namespace Utils
       return discoveredAt.AddDays(days);
     }
 
-    /// <summary>
-    /// Tenta interpretar string de severidade vinda de scanners (Nessus, Qualys, OpenVAS, Trivy)
-    /// </summary>
     public static severityEnum ParseSeverityString(string? value, decimal fallbackScore = 0)
     {
       if (string.IsNullOrWhiteSpace(value))

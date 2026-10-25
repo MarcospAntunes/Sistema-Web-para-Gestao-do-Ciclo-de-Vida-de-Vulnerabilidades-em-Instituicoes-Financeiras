@@ -12,11 +12,9 @@ export default function Topbar() {
   const currentTheme = resolveTheme(theme);
   const pathname = usePathname();
 
-  // Simple breadcrumb logic based on pathname
   const pathParts = pathname.split('/').filter(Boolean);
   const currentPath = pathParts[pathParts.length - 1];
-  
-  // Format string from "visao-geral" to "Visão geral"
+
   const formatPath = (str: string) => {
     const formatted = str.replace(/-/g, ' ');
     if (str === 'visao-geral') return 'Visão geral';

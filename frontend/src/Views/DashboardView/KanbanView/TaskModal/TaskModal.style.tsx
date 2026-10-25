@@ -508,7 +508,6 @@ export const ModalBody = styled.div<themeType>`
     }
   }
 
-  /* Timeline Styles */
   .timeline-container {
     display: flex;
     flex-direction: column;

@@ -244,3 +244,84 @@ export const TeamStyle = styled.div<themeType>`
     }
   }
 `;
+
+export const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+`;
+
+export const ModalBox = styled.div`
+  background: #121824;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  padding: 24px;
+  color: #fff;
+
+  .modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    h3 { margin: 0; font-size: 1.15rem; }
+    button { background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 1.25rem; }
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    label {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    input, select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      &:focus { outline: none; border-color: #3b82f6; }
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 12px;
+
+      button {
+        padding: 9px 18px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        font-weight: 500;
+      }
+      .btn-cancel {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #cbd5e1;
+      }
+      .btn-submit {
+        background: #2563eb;
+        border: none;
+        color: #fff;
+        &:hover { background: #1d4ed8; }
+      }
+    }
+  }
+`;

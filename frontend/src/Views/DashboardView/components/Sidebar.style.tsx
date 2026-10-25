@@ -16,7 +16,7 @@ export const SidebarStyle = styled.aside<themeType>`
     align-items: center;
     padding: 0 24px;
     border-bottom: 1px solid ${({ theme }) => theme["sidebar-border"]};
-    /* Scale down the logo slightly */
+
     > div {
       transform: scale(0.85);
       transform-origin: left center;
@@ -134,7 +134,7 @@ export const SidebarStyle = styled.aside<themeType>`
 
       .progress-fill {
         height: 100%;
-        width: 84%; /* 428 / 510 approx 84% */
+        width: 84%;
         background-color: ${({ theme }) => theme.primary};
       }
     }

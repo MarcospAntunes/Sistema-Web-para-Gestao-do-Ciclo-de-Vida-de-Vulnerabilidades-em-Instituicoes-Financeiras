@@ -158,25 +158,18 @@ namespace Services
       if (user == null)
         throw new UnauthorizedAccessException("Usuário não fornecido.");
 
-      // 1. Tenta buscar pelo padrão NameIdentifier
       string? claimValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
 
-      // 2. Se falhar, tenta buscar pela string pura "id" ou pelo Name (fallback de segurança)
       if (string.IsNullOrEmpty(claimValue))
       {
         claimValue = user.FindFirstValue("id") ?? user.FindFirstValue("sub") ?? user.FindFirstValue(ClaimTypes.Name);
       }
 
-      // 3. Validação robusta antes de tentar converter para Inteiro
       if (string.IsNullOrEmpty(claimValue) || !int.TryParse(claimValue, out int userId))
       {
-        // Se quiser debugar, descomente a linha abaixo para listar no console do C# todas as claims que vieram no cookie:
-        // foreach (var c in user.Claims) { Console.WriteLine($"Claim encontrada: {c.Type} = {c.Value}"); }
-
         throw new UnauthorizedAccessException("ID do usuário não pôde ser encontrado nas claims do cookie.");
       }
 
-      // 4. Busca o usuário de forma segura
       User? userLogged = await _context.Users
           .AsNoTracking()
           .FirstOrDefaultAsync(u => u.Id == userId);
