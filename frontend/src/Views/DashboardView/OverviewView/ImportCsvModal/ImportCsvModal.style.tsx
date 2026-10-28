@@ -1,4 +1,19 @@
 import styled from "styled-components";
+import { Tone } from "./ImportCsvModal.type";
+
+const toneColors: Record<Tone, { bg: string; border: string; text: string }> = {
+  success: {
+    bg: "rgba(16, 185, 129, 0.12)",
+    border: "#10b981",
+    text: "#6ee7b7",
+  },
+  warning: {
+    bg: "rgba(245, 158, 11, 0.12)",
+    border: "#f59e0b",
+    text: "#fcd34d",
+  },
+  error: { bg: "rgba(239, 68, 68, 0.12)", border: "#ef4444", text: "#fca5a5" },
+};
 
 const Overlay = styled.div`
   position: fixed;
@@ -58,8 +73,12 @@ const Body = styled.div`
 `;
 
 const DropArea = styled.div<{ $isDragOver: boolean }>`
-  border: 2px dashed ${(props) => (props.$isDragOver ? "#3b82f6" : "rgba(255, 255, 255, 0.15)")};
-  background: ${(props) => (props.$isDragOver ? "rgba(59, 130, 246, 0.1)" : "rgba(255, 255, 255, 0.02)")};
+  border: 2px dashed
+    ${(props) => (props.$isDragOver ? "#3b82f6" : "rgba(255, 255, 255, 0.15)")};
+  background: ${(props) =>
+    props.$isDragOver
+      ? "rgba(59, 130, 246, 0.1)"
+      : "rgba(255, 255, 255, 0.02)"};
   border-radius: 8px;
   padding: 32px 20px;
   text-align: center;
@@ -115,21 +134,74 @@ const FileInfo = styled.div`
   }
 `;
 
-const ResultCard = styled.div<{ $isSuccess: boolean }>`
+const ResultCard = styled.div<{ $tone: Tone }>`
   padding: 14px 16px;
   border-radius: 6px;
   font-size: 0.88rem;
-  background: ${(props) => (props.$isSuccess ? "rgba(16, 185, 129, 0.12)" : "rgba(239, 68, 68, 0.12)")};
-  border: 1px solid ${(props) => (props.$isSuccess ? "#10b981" : "#ef4444")};
-  color: ${(props) => (props.$isSuccess ? "#6ee7b7" : "#fca5a5")};
+  background: ${(props) => toneColors[props.$tone].bg};
+  border: 1px solid ${(props) => toneColors[props.$tone].border};
+  color: ${(props) => toneColors[props.$tone].text};
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   gap: 10px;
 
-  svg {
-    font-size: 1.2rem;
-    flex-shrink: 0;
-    margin-top: 2px;
+  .headline {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-weight: 600;
+
+    svg {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+
+    .stat {
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      strong {
+        font-size: 1.1rem;
+        color: #fff;
+      }
+
+      span {
+        font-size: 0.72rem;
+        color: #cbd5e1;
+      }
+    }
+  }
+
+  details {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    padding: 8px 10px;
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      max-height: 160px;
+      overflow-y: auto;
+      color: #e2e8f0;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
   }
 `;
 
@@ -198,12 +270,12 @@ const Footer = styled.div`
 `;
 
 export {
-    Body,
-    DropArea,
-    FileInfo,
-    Footer,
-    Header,
-    Overlay,
-    ResultCard,
-    ModalCard
-}
+  Body,
+  DropArea,
+  FileInfo,
+  Footer,
+  Header,
+  Overlay,
+  ResultCard,
+  ModalCard,
+};

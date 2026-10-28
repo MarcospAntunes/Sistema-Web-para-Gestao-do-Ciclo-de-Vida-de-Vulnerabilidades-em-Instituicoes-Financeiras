@@ -13,6 +13,25 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   };
 }
 
+type VulnerabilityPayload = {
+  title: string;
+  description: string;
+  cve: string;
+  cveScore: number;
+  cvssVersion?: string;
+  cvssVector?: string;
+  status: number;
+  assignedUserId: number;
+  severity?: number;
+  priority?: number;
+  discoveredAt?: string;
+  dueDate?: string;
+  asset?: string;
+  assetEnvironment?: string;
+  assetCriticality?: number;
+  exposure?: number;
+};
+
 export async function getVulnerabilities(params?: {
   status?: number;
   severity?: number;
@@ -22,8 +41,10 @@ export async function getVulnerabilities(params?: {
     const headers = await getAuthHeaders();
     const searchParams = new URLSearchParams();
 
-    if (params?.status !== undefined) searchParams.append("status", params.status.toString());
-    if (params?.severity !== undefined) searchParams.append("severity", params.severity.toString());
+    if (params?.status !== undefined)
+      searchParams.append("status", params.status.toString());
+    if (params?.severity !== undefined)
+      searchParams.append("severity", params.severity.toString());
     if (params?.search) searchParams.append("search", params.search);
 
     const query = searchParams.toString() ? `?${searchParams.toString()}` : "";
@@ -94,20 +115,35 @@ export async function getVulnerability(id: number) {
   }
 }
 
-export async function createVulnerability(payload: {
-  title: string;
-  description: string;
-  cve: string;
+export async function classifyVulnerability(payload: {
   cveScore: number;
-  cvssVersion?: string;
-  cvssVector?: string;
-  status: number;
-  severity: number;
-  priority: number;
-  assignedUserId: number;
-  discoveredAt: string;
-  dueDate: string;
+  assetCriticality?: number;
+  exposure?: number;
 }) {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${API_URL}/api/Vulnerability/classify`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      throw new Error(json?.message || "Erro ao calcular a classificação");
+    }
+
+    return { success: true, data: json?.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Erro desconhecido",
+    };
+  }
+}
+
+export async function createVulnerability(payload: VulnerabilityPayload) {
   try {
     const headers = await getAuthHeaders();
     const res = await fetch(`${API_URL}/api/Vulnerability`, {
@@ -132,20 +168,7 @@ export async function createVulnerability(payload: {
 
 export async function updateVulnerability(
   id: number,
-  payload: {
-    title: string;
-    description: string;
-    cve: string;
-    cveScore: number;
-    cvssVersion?: string;
-    cvssVector?: string;
-    status: number;
-    severity: number;
-    priority: number;
-    assignedUserId: number;
-    discoveredAt: string;
-    dueDate: string;
-  }
+  payload: VulnerabilityPayload,
 ) {
   try {
     const headers = await getAuthHeaders();
@@ -240,7 +263,7 @@ export async function getVulnerabilityHistory(id: number) {
 
 export async function addVulnerabilityHistory(
   id: number,
-  payload: { action: string; comment?: string }
+  payload: { action: string; comment?: string },
 ) {
   try {
     const headers = await getAuthHeaders();
