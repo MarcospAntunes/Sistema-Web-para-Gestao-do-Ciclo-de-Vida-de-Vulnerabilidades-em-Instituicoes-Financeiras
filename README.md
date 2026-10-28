@@ -24,6 +24,11 @@ Abra o navegador e acesse:
 http://localhost:3000
 ```
 
+Coloque o usuário de teste:
+
+- *login:* admin@vulntracker.com
+- *Senha*: Admin@2026!
+
 ## 4. Encerrar a aplicação
 
 Para parar os serviços, execute:
